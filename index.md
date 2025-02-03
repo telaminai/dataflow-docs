@@ -13,8 +13,8 @@ Designed for ease of use a developer can be up and running in a couple of minute
 A stream api combines event feeds and user functions into a processing graph. DataFlow takes care of all the wiring 
 and presents a simple onEvent method for integration into a host application. 
 
-# Example
-----
+## Example
+-----
 <div class="tab">
   <button class="tablinks2" onclick="openTab2(event, 'Windowing')" id="defaultExample">Windowing</button>
   <button class="tablinks2" onclick="openTab2(event, 'Filtering')">Filtering</button>
@@ -28,17 +28,14 @@ and presents a simple onEvent method for integration into a host application.
 {% highlight java %}
 public class WindowExample {
     record CarTracker(String id, double speed) {}
-
     public static void main(String[] args) {
         //calculate average speed, sliding window 5 buckets of 200 millis
         DataFlow averageCarSpeed = DataFlowBuilder.subscribe(CarTracker::speed)
                 .slidingAggregate(Aggregates.doubleAverageFactory(), 200, 5)
                 .sink("average car speed")
                 .build();
-
         //register an output sink
         averageCarSpeed.addSink("average car speed", System.out::println);
-
         //send data from an unbounded real-time feed
         Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
                 () -> averageCarSpeed.onEvent(new CarTracker("car-reg", new Random().nextDouble(100))),
@@ -147,8 +144,8 @@ connectEventFlow(sep);
 </div>
 </div>
 
-# Latest release
----
+## Latest release
+----
 
 Open source on [GitHub]({{site.fluxtion_src}}), artifacts published to maven central.
 
