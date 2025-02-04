@@ -19,6 +19,7 @@ and presents a simple onEvent method for integration into a host application.
 <div class="tab">
   <button class="tablinks2" onclick="openTab2(event, 'Windowing')" id="defaultExample">Windowing</button>
   <button class="tablinks2" onclick="openTab2(event, 'Multi feed join')" >Multi feed join</button>
+  <button class="tablinks2" onclick="openTab2(event, 'TriggerOverride')" >Trigger override</button>
 </div>
 
 <div id="Windowing" class="tabcontent2">
@@ -111,6 +112,43 @@ public class MultiFeedJoinExample {
 {% endhighlight %}
 </div>
 </div>
+public class TriggerExample {
+    public static void main(String[] args) {
+        DataFlow sumDataFlow = DataFlowBuilder.subscribe(Integer.class)
+                .aggregate(Aggregates.intSumFactory())
+                .resetTrigger(DataFlowBuilder.subscribeToSignal("resetTrigger"))
+                .filter(i -> i != 0)
+                .publishTriggerOverride(DataFlowBuilder.subscribeToSignal("publishSumTrigger"))
+                .console("Current sun:{}")
+                .build();
+
+        sumDataFlow.onEvent(10);
+        sumDataFlow.onEvent(50);
+        sumDataFlow.onEvent(32);
+        //publish
+        sumDataFlow.publishSignal("publishSumTrigger");
+
+        //reset sum
+        sumDataFlow.publishSignal("resetTrigger");
+
+        //new sum
+        sumDataFlow.onEvent(8);
+        sumDataFlow.onEvent(17);
+        //publish
+        sumDataFlow.publishSignal("publishSumTrigger");
+    }
+}
+
+<div id="TriggerOverride" class="tabcontent2">
+<div markdown="1">
+{% highlight java %}
+
+{% endhighlight %}
+</div>
+</div>
+
+
+
 
 ## Latest release
 ----
