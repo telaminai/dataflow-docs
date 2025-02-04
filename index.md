@@ -112,6 +112,11 @@ public class MultiFeedJoinExample {
 {% endhighlight %}
 </div>
 </div>
+
+
+<div id="TriggerOverride" class="tabcontent2">
+<div markdown="1">
+{% highlight java %}
 public class TriggerExample {
     public static void main(String[] args) {
         DataFlow sumDataFlow = DataFlowBuilder.subscribe(Integer.class)
@@ -138,11 +143,6 @@ public class TriggerExample {
         sumDataFlow.publishSignal("publishSumTrigger");
     }
 }
-
-<div id="TriggerOverride" class="tabcontent2">
-<div markdown="1">
-{% highlight java %}
-
 {% endhighlight %}
 </div>
 </div>
