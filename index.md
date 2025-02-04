@@ -1,6 +1,6 @@
 ---
-title: Home
-layout: home
+title: DataFlow
+layout: default
 nav_order: 1
 ---
 # DataFlow introduction
@@ -19,7 +19,7 @@ and presents a simple onEvent method for integration into a host application.
   <button class="tablinks2" onclick="openTab2(event, 'Windowing')" id="defaultExample">Windowing</button>
   <button class="tablinks2" onclick="openTab2(event, 'Filtering')">Filtering</button>
   <button class="tablinks2" onclick="openTab2(event, 'GroupBy')" >GroupBy and aggregate</button>
-  <button class="tablinks2" onclick="openTab2(event, 'AnomalyDetection')" >Anomaly detection</button>
+  <button class="tablinks2" onclick="openTab2(event, 'Multi feed join')" >Multi feed join</button>
 </div>
 
 
@@ -110,36 +110,70 @@ ODD/EVEN map:{}
 </div>
 </div>
 
-<div id="AnomalyDetection" class="tabcontent2">
+<div id="Multi feed join" class="tabcontent2">
 <div markdown="1">
 {% highlight java %}
-//create a streaming event processor
-var sep = Fluxtion.interpret(c -> {
-    //embed a stateful user class to notify support teams
-    var workScheduler = new WorkScheduler();
-    //live machine locations
-    DataFlow.subscribe(MachineLocation.class).push(workScheduler::setMachineLocation);
-    //live support details
-    DataFlow.subscribe(SupportContact.class).push(workScheduler::setSupportContact);
+public class MultiFeedJoinExample {
+    public static void main(String[] args) {
+        //stream of realtime machine temperatures grouped by machineId
+        var currentMachineTemp = DataFlowBuilder.groupBy(
+                MachineReadingEvent::id, MachineReadingEvent::temp);
+        //create a stream of averaged machine sliding temps,
+        //with a 4-second window and 1 second buckets grouped by machine id
+        var avgMachineTemp = DataFlowBuilder.subscribe(MachineReadingEvent.class)
+                .groupBySliding(
+                        MachineReadingEvent::id,
+                        MachineReadingEvent::temp,
+                        DoubleAverageFlowFunction::new,
+                        1000,
+                        4);
+        //join machine profiles with contacts and then with readings.
+        //Publish alarms with stateful user function
+        var tempMonitor = DataFlowBuilder.groupBy(MachineProfileEvent::id)
+                .mapValues(MachineState::new)
+                .mapBi(
+                        DataFlowBuilder.groupBy(SupportContactEvent::locationCode),
+                        Helpers::addContact)
+                .innerJoin(currentMachineTemp, MachineState::setCurrentTemperature)
+                .innerJoin(avgMachineTemp, MachineState::setAvgTemperature)
+                .publishTriggerOverride(FixedRateTrigger.atMillis(1_000))
+                .filterValues(MachineState::outsideOperatingTemp)
+                .map(GroupBy::toMap)
+                .map(new AlarmDeltaFilter()::updateActiveAlarms)
+                .filter(AlarmDeltaFilter::isChanged)
+                .sink("alarmPublisher")
+                .build();
 
-    //listen to machine temperature and groupBY id to a list of last 50 temperature readings
-    DataFlow.subscribe(MachineReadings.class)
-        .groupByFieldsGetAndAggregate(MachineReadings::temp, Collectors.listFactory(50), MachineReadings::id)
-        //reset readings signal
-        .resetTrigger(DataFlow.subscribeToSignal("reset"))
-        //wait for at least 10 readings
-        .filterValues(tempReadings -> tempReadings.size() > 10)
-        //User static function convert a list of doubles to an average
-        .mapValues(Mappers::listToAverage)
-        //filter for avg temp > 48
-        .filterValues(temp -> temp > 48)
-        //push to user class that notifies support in the correct region
-        .push(workScheduler::investigateMachine)
-};
+        runSimulation(tempMonitor);
+    }
 
-//init the streaming event processor and connect to your event flow source
-sep.init();
-connectEventFlow(sep);
+    private static void runSimulation(DataFlow tempMonitor) {
+        //any java.util.Consumer can be used as sink
+        tempMonitor.addSink("alarmPublisher", Helpers::prettyPrintAlarms);
+
+        //set up machine locations
+        tempMonitor.onEvent(new MachineProfileEvent("server_GOOG", LocationCode.USA_EAST_1, 70, 48));
+        tempMonitor.onEvent(new MachineProfileEvent("server_AMZN", LocationCode.USA_EAST_1, 99.999, 65));
+        tempMonitor.onEvent(new MachineProfileEvent("server_MSFT", LocationCode.USA_EAST_2,92, 49.99));
+        tempMonitor.onEvent(new MachineProfileEvent("server_TKM", LocationCode.USA_EAST_2,102, 50.0001));
+
+        //set up support contacts
+        tempMonitor.onEvent(new SupportContactEvent("Jean", LocationCode.USA_EAST_1, "jean@fluxtion.com"));
+        tempMonitor.onEvent(new SupportContactEvent("Tandy", LocationCode.USA_EAST_2, "tandy@fluxtion.com"));
+
+        //Send random MachineReadingEvent using `DataFlow.onEvent` 
+        Random random = new Random();
+        final String[] MACHINE_IDS = new String[]{"server_GOOG", "server_AMZN", "server_MSFT", "server_TKM"};
+        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> {
+                    String machineId = MACHINE_IDS[random.nextInt(MACHINE_IDS.length)];
+                    double temperatureReading = random.nextDouble() * 100;
+                    tempMonitor.onEvent(new MachineReadingEvent(machineId, temperatureReading));
+                },
+                10_000, 1, TimeUnit.MICROSECONDS);
+
+        System.out.println("Simulation started - wait four seconds for first machine readings\n");
+    }
+}
 {% endhighlight %}
 </div>
 </div>
