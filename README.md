@@ -1,4 +1,4 @@
-# [Visit DataFlow documentation]
+# [Visit DataFlow documentation](https://telaminai.github.io/dataflow-docs/)
 
 
 Topics covered in the documentation
@@ -22,6 +22,3 @@ Topics covered in the documentation
   - triggering
   - 
 - Cookbook
-
-
-[DataFlow documentation]: https://telaminai.github.io/dataflow-docs/
