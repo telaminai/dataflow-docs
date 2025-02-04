@@ -6,15 +6,16 @@ nav_order: 1
 # Fluxtion DataFlow
 ---- 
 
-* Java library that saves time when creating reactive applications
+* Java library that saves time developing and maintaining reactive applications
 * Quick start development up and running in a couple of minutes
 * Native Kafka connector for simple enterprise integration
 {: .fs-6 }
 
 ## Example
 -----
-A stream api combines event feeds and user functions into a processing graph. DataFlow takes care of all the wiring
-and presents a simple onEvent method for integration into a host application.
+DataFlow stream api combines event feeds and user functions into a processing directed acyclic graph. Wiring and 
+dispatch is automatically resolved by DataFlowBuilder. The returned DataFlow instance exposes a simple onEvent method 
+for integration into a host application.
 
 <div class="tab">
   <button class="tablinks2" onclick="openTab2(event, 'Windowing')" id="defaultExample">Windowing</button>
@@ -51,11 +52,11 @@ public class WindowExample {
 public class MultiFeedJoinExample {
     public static void main(String[] args) {
         //stream of realtime machine temperatures grouped by machineId
-        var currentMachineTemp = DataFlowBuilder.groupBy(
+        DataFlow currentMachineTemp = DataFlowBuilder.groupBy(
                 MachineReadingEvent::id, MachineReadingEvent::temp);
         //create a stream of averaged machine sliding temps,
         //with a 4-second window and 1 second buckets grouped by machine id
-        var avgMachineTemp = DataFlowBuilder.subscribe(MachineReadingEvent.class)
+        DataFlow avgMachineTemp = DataFlowBuilder.subscribe(MachineReadingEvent.class)
                 .groupBySliding(
                         MachineReadingEvent::id,
                         MachineReadingEvent::temp,
@@ -64,7 +65,7 @@ public class MultiFeedJoinExample {
                         4);
         //join machine profiles with contacts and then with readings.
         //Publish alarms with stateful user function
-        var tempMonitor = DataFlowBuilder.groupBy(MachineProfileEvent::id)
+        DataFlow tempMonitor = DataFlowBuilder.groupBy(MachineProfileEvent::id)
                 .mapValues(MachineState::new)
                 .mapBi(
                         DataFlowBuilder.groupBy(SupportContactEvent::locationCode),
@@ -146,9 +147,6 @@ public class TriggerExample {
 {% endhighlight %}
 </div>
 </div>
-
-
-
 
 ## Latest release
 ----
