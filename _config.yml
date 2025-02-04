@@ -2,10 +2,10 @@ title: Fluxtion DataFlow
 description: Documentation for Fluxtion DataFlow
 theme: just-the-docs
 
-url: https://just-the-docs.github.io
+url: https://telaminai.github.io/dataflow-docs/
 
 aux_links:
-  DataFlow repo: https://just-the-docs.github.io
+  DataFlow repo: https://telaminai.github.io/dataflow-docs/
 
 color_scheme: fluxtion_style
 
