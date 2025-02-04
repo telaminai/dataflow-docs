@@ -5,7 +5,7 @@
 
 /* Style the buttons inside the tab */
 .tab button {
-  background-color: #f1f1f1;
+  background-color: #ccc;
   float: left;
   border: none;
   outline: none;
@@ -22,7 +22,7 @@
 
 /* Create an active/current tablink class */
 .tab button.active {
-  background-color: #ccc;
+  background-color: #f1f1f1;
 }
 
 /* Style the tab content */
