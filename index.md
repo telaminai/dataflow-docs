@@ -32,6 +32,7 @@ public class WindowExample {
         //calculate average speed, sliding window 5 buckets of 200 millis
         DataFlow averageCarSpeed = DataFlowBuilder.subscribe(CarTracker::speed)
                 .slidingAggregate(Aggregates.doubleAverageFactory(), 200, 5)
+                .map(v -> "average speed: " + v.intValue() + " km/h")
                 .sink("average car speed")
                 .build();
         //register an output sink

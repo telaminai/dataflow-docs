@@ -6,19 +6,19 @@ Topics covered in the documentation
   - 5 minute tutorial
   - Overview
   - Use cases
+- Reference
+  - Developer workflow
+  - Subscribing
+  - Functional support
+  - User functions
+  - GroupBy
+  - Windowing
+  - triggering
 - Integrations
   - Vanilla java
   - Kafka event feed
   - File event feed
   - Debezium event feed
   - Writing an event feed
-- Reference
-  - Developer workflow
-  - Subscribing
-  - Functional support
-  - User functions
-  - Groupby
-  - Windowing
-  - triggering
-  - 
 - Cookbook
+  - TBD
