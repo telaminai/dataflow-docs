@@ -46,8 +46,8 @@ import java.util.concurrent.TimeUnit;
 
 //Calculates the average speed by manufacturer in a sliding window of 2 seconds with a 500 millisecond bucket size
 public class GroupByWindowExample {
-record CarTracker(String make, double speed) {}
-static String[] makes = new String[]{"BMW", "Ford", "Honda", "Jeep", "VW"};
+    record CarTracker(String make, double speed) {}
+    static String[] makes = new String[]{"BMW", "Ford", "Honda", "Jeep", "VW"};
 
     public static void main(String[] args) {
         System.out.println("building DataFlow::avgSpeedByMake...");
