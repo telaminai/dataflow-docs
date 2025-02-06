@@ -9,6 +9,7 @@ nav_order: 1
 * Java library that saves time developing and maintaining reactive applications
 * Quick start development up and running in a couple of minutes
 * Native Kafka connector for simple enterprise integration
+* Control functions embedded in a DataFlow act as agents responding to input events.
 {: .fs-6 }
 
 ## Example
@@ -16,6 +17,9 @@ nav_order: 1
 DataFlow stream api combines event feeds and user functions into a processing directed acyclic graph. Wiring and 
 dispatch is automatically resolved by DataFlowBuilder. The returned DataFlow instance exposes a simple onEvent method 
 for integration into a host application.
+
+Both analytical and control functions are connected in a DataFlow, giving full agentic behaviour in response to real time
+input events.
 
 <div class="tab">
   <button class="tablinks2" onclick="openTab2(event, 'Windowing')" id="defaultExample">Windowing</button>
@@ -166,7 +170,7 @@ jbang https://github.com/telaminai/dataflow-examples/blob/main/getstarted/src/ma
 
 ## Quickstart tutorial video
 ----
-See the [1 minute tutorial](sections/overview/Quickstart). Tracks the average car speed in a sliding window, grouped 
+See the [1 minute tutorial](sections/overview/quickstart). Tracks the average car speed in a sliding window, grouped 
 by manufacturer
 
 
