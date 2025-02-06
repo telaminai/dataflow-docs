@@ -25,7 +25,6 @@ Topics covered in the documentation
  
 
 
-![quik start](https://github.com/user-attachments/assets/ea6283c1-f787-42f9-8d28-cb9da030085f)
-
-
+<video src="https://github.com/user-attachments/assets/ea6283c1-f787-42f9-8d28-cb9da030085f" controls="controls" style="max-width: 730px;">
+</video>
 
