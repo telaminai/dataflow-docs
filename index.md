@@ -173,11 +173,6 @@ by manufacturer
     <dependencies>
         <dependency>
             <groupId>com.fluxtion.dataflow</groupId>
-            <artifactId>dataflow-runtime</artifactId>
-            <version>{{site.dataflow_version}}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fluxtion.dataflow</groupId>
             <artifactId>dataflow-builder</artifactId>
             <version>{{site.dataflow_version}}</version>
         </dependency>
@@ -196,7 +191,6 @@ by manufacturer
 <div id="Gradle" class="tabcontent">
 <div markdown="1">
 {% highlight groovy %}
-implementation 'com.fluxtion.dataflow:dataflow-runtime:{{site.dataflow_version}}'
 implementation 'com.fluxtion.dataflow:dataflow-builder:{{site.dataflow_version}}'
 {% endhighlight %}
 </div>
