@@ -30,10 +30,12 @@ Windows Powershell:
 
 Copy the example into editor and save
 {% highlight java %}
-//REPOS repsy-fluxtion=https://repo.repsy.io/mvn/gregv12/default
-//DEPS com.fluxtion.dataflow:dataflow-builder:1.14
+//REPOS repsy-fluxtion=https://repo.repsy.io/mvn/fluxtion/fluxtion-public
+//DEPS com.fluxtion.dataflow:dataflow-builder:1.0.0
 //COMPILE_OPTIONS -proc:full
-package com.fluxtion.dataflow.examples.frontpage.windowing;
+//PREVIEW
+//JAVA 21
+package com.fluxtion.dataflow.examples.quickstart;
 
 import com.fluxtion.dataflow.builder.DataFlowBuilder;
 import com.fluxtion.dataflow.runtime.DataFlow;
@@ -46,10 +48,12 @@ import java.util.concurrent.TimeUnit;
 
 //Calculates the average speed by manufacturer in a sliding window of 2 seconds with a 500 millisecond bucket size
 public class GroupByWindowExample {
-record CarTracker(String make, double speed) {}
-static String[] makes = new String[]{"BMW", "Ford", "Honda", "Jeep", "VW"};
+    record CarTracker(String make, double speed) { }
+
+    static String[] makes = new String[]{"BMW", "Ford", "Honda", "Jeep", "VW"};
 
     public static void main(String[] args) {
+        System.out.println("building DataFlow::avgSpeedByMake...");
         //build the DataFlow
         DataFlow avgSpeedByMake = DataFlowBuilder.subscribe(CarTracker.class)
                 .groupBySliding(
@@ -66,6 +70,7 @@ static String[] makes = new String[]{"BMW", "Ford", "Honda", "Jeep", "VW"};
         avgSpeedByMake.addSink("average car speed", System.out::println);
 
         //send data from an unbounded real-time feed to the DataFlow
+        System.out.println("publishing events to DataFlow::avgSpeedByMake...\n");
         Random random = new Random();
         Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
                 () -> avgSpeedByMake.onEvent(new CarTracker(makes[random.nextInt(makes.length)], random.nextDouble(100))),
@@ -85,7 +90,13 @@ Console output:
 
 {% highlight bash %}
 %> jbang GroupByWindowExample.java
+[jbang] Resolving dependencies...
+[jbang]    com.fluxtion.dataflow:dataflow-builder:1.0.0
+[jbang] Dependencies resolved
 [jbang] Building jar for GroupByWindowExample.java...
+building DataFlow::avgSpeedByMake...
+publishing events to DataFlow::avgSpeedByMake...
+
 {VW=avgSpeed-92 km/h, Jeep=avgSpeed-70 km/h, Ford=avgSpeed-79 km/h, BMW=avgSpeed-42 km/h}
 {Jeep=avgSpeed-70 km/h, BMW=avgSpeed-53 km/h}
 {BMW=avgSpeed-54 km/h}
