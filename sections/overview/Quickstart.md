@@ -8,7 +8,7 @@ layout: default
 # DataFlow developer quickstart
 ---
 
-Quickstart tutorial to get developers up and running in 5 minutes leveraging jbang. Calculates the average speed 
+Quickstart tutorial to get developers up and running in 1 minute leveraging jbang. Calculates the average speed 
 of s stream of cars grouped by manufacturer in a sliding window of 2 seconds with a 500 millisecond bucket size.
 
 ### 1.  Install jbang 

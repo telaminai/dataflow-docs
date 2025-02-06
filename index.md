@@ -162,7 +162,6 @@ by manufacturer
 
 ## Latest release
 ----
-Open source on [GitHub]({{site.fluxtion_src}}), artifacts published to maven central.
 
 <div class="tab">
   <button class="tablinks" onclick="openTab(event, 'Maven')">Maven</button>
@@ -173,24 +172,32 @@ Open source on [GitHub]({{site.fluxtion_src}}), artifacts published to maven cen
 {% highlight xml %}
     <dependencies>
         <dependency>
-            <groupId>com.fluxtion</groupId>
-            <artifactId>runtime</artifactId>
-            <version>{{site.fluxtion_version}}</version>
+            <groupId>com.fluxtion.dataflow</groupId>
+            <artifactId>dataflow-runtime</artifactId>
+            <version>{{site.dataflow_version}}</version>
         </dependency>
         <dependency>
-            <groupId>com.fluxtion</groupId>
-            <artifactId>compiler</artifactId>
-            <version>{{site.fluxtion_version}}</version>
+            <groupId>com.fluxtion.dataflow</groupId>
+            <artifactId>dataflow-builder</artifactId>
+            <version>{{site.dataflow_version}}</version>
         </dependency>
     </dependencies>
+
+    <repositories>
+        <repository>
+            <id>repsy-fluxtion-public</id>
+            <name>Fluxtion public repo</name>
+            <url>https://repo.repsy.io/mvn/fluxtion/fluxtion-public</url>
+        </repository>
+    </repositories>
 {% endhighlight %}
 </div>
 </div>
 <div id="Gradle" class="tabcontent">
 <div markdown="1">
 {% highlight groovy %}
-implementation 'com.fluxtion:runtime:{{site.fluxtion_version}}'
-implementation 'com.fluxtion:compiler:{{site.fluxtion_version}}'
+implementation 'com.fluxtion.dataflow:dataflow-runtime:{{site.dataflow_version}}'
+implementation 'com.fluxtion.dataflow:dataflow-builder:{{site.dataflow_version}}'
 {% endhighlight %}
 </div>
 </div>
