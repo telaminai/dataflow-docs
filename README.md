@@ -28,7 +28,7 @@ Topics covered in the documentation
 <video src="https://github.com/user-attachments/assets/ea6283c1-f787-42f9-8d28-cb9da030085f" controls="controls" style="max-width: 730px;">
 </video>
 
-<video src="https://private-user-images.githubusercontent.com/12534882/410417853-ea6283c1-f787-42f9-8d28-cb9da030085f.mov" controls="controls" muted="muted" class="d-block rounded-bottom-2 border-top width-fit" style="max-height:730px; min-height: 400px">
+<video src="https://private-user-images.githubusercontent.com/12534882/410417853-ea6283c1-f787-42f9-8d28-cb9da030085f.mov" controls="controls" muted="muted" style="max-height:630px; min-height: 400px">
 </video>
 
 <video src="https://user-images.githubusercontent.com/28604639/146938627-beb71c68-b6d6-4d9f-a7eb-2d23c5b95e14.mov" controls="controls" style="max-width: 730px;">
