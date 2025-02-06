@@ -151,10 +151,12 @@ public class TriggerExample {
 
 ## Quickstart tutorial video
 ----
-See the [1 minute tutorial](sections/overview/Quickstart.md). Tsrack the average car speed in a sliding window, grouped 
+See the [1 minute tutorial](sections/overview/Quickstart.md). Tracks the average car speed in a sliding window, grouped 
 by manufacturer
 
-<video src="https://github.com/user-attachments/assets/ea6283c1-f787-42f9-8d28-cb9da030085f" controls="controls" style="max-height: 730px; min-height: 400px">
+
+
+<video src="https://github.com/user-attachments/assets/ea6283c1-f787-42f9-8d28-cb9da030085f" controls="controls" style="max-height: 730px;">
 </video>
 
 
