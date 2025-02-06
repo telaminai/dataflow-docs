@@ -149,6 +149,14 @@ public class TriggerExample {
 </div>
 </div>
 
+## Quickstart tutorial video
+----
+See the [1 minute tutorial](sections/overview/Quickstart.md)
+
+<video src="https://github.com/user-attachments/assets/ea6283c1-f787-42f9-8d28-cb9da030085f" controls="controls" style="max-height: 730px; min-height: 400px">
+</video>
+
+
 ## Latest release
 ----
 Open source on [GitHub]({{site.fluxtion_src}}), artifacts published to maven central.

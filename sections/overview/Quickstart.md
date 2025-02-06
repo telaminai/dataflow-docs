@@ -1,5 +1,5 @@
 ---
-title: 5 min tutorial
+title: 1 minute tutorial
 parent: DataFlow
 nav_order: 1
 published: true
