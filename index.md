@@ -44,6 +44,11 @@ public class WindowExample {
     }
 }
 {% endhighlight %}
+
+run example with jbang:
+{% highlight shell %}
+jbang https://github.com/telaminai/dataflow-examples/blob/main/getstarted/src/main/java/com/fluxtion/dataflow/examples/frontpage/windowing/WindowExample.java
+{% endhighlight %}
 </div>
 </div>
 
@@ -112,6 +117,11 @@ public class MultiFeedJoinExample {
     }
 }
 {% endhighlight %}
+
+run example with jbang:
+{% highlight shell %}
+jbang https://github.com/telaminai/dataflow-examples/blob/main/getstarted/src/main/java/com/fluxtion/dataflow/examples/frontpage/multijoin/MultiFeedJoinExample.java
+{% endhighlight %}
 </div>
 </div>
 
@@ -145,6 +155,11 @@ public class TriggerExample {
         sumDataFlow.publishSignal("publishSumTrigger");
     }
 }
+{% endhighlight %}
+
+run example with jbang:
+{% highlight shell %}
+jbang https://github.com/telaminai/dataflow-examples/blob/main/getstarted/src/main/java/com/fluxtion/dataflow/examples/frontpage/triggering/TriggerExample.java
 {% endhighlight %}
 </div>
 </div>
