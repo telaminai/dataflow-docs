@@ -151,7 +151,7 @@ public class TriggerExample {
 
 ## Quickstart tutorial video
 ----
-See the [1 minute tutorial](sections/overview/Quickstart.md). Tracks the average car speed in a sliding window, grouped 
+See the [1 minute tutorial](sections/overview/Quickstart). Tracks the average car speed in a sliding window, grouped 
 by manufacturer
 
 
