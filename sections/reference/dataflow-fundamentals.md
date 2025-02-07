@@ -6,7 +6,7 @@ published: true
 layout: default
 ---
 
-# DataFlow explored
+# DataFlow fundamentals
 ---
 A DataFlow is a container that combines dependency injection with event dispatch for realtime data processing. In
 technical
