@@ -4,7 +4,7 @@
 Topics covered in the documentation
 - DataFlow
   - 1 minute tutorial
-  - User agents
+  - Agentic DataFlows
   - Use cases
   - 10 minute tutorial
 - Reference

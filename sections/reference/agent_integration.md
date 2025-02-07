@@ -1,5 +1,5 @@
 ---
-title: Agent Integration
+title: Agent integration
 parent: Reference
 has_children: false
 nav_order: 30
@@ -7,24 +7,11 @@ published: true
 layout: default
 ---
 
-# Processing event streams
+# Agent integration
 {: .no_toc }
 ---
 
-This section documents the runtime event processing callback api and behaviour taking an imperative approach to using
-Fluxtion.
-
-## Three steps to using Fluxtion
-{: .no_toc }
-
-{: .info }
-1 - **Create user classes and mark event handling methods with Fluxtion annotations**<br>
-2 - Build the event processor using fluxtion compiler utility<br>
-3 - Integrate the event processor in the app and feed it events
-{: .fs-4 }
-
-In this section we are covering the first of these **Create user classes and
-mark event handling methods with Fluxtion annotations** using an imperative approach.
+This section documents how user agents modelled as java classes or pure functions are integrated into a DataFlow
 
 {: .no_toc }
 <details open markdown="block">

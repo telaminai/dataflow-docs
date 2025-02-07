@@ -9,8 +9,15 @@ nav_order: 1
 * Java library that saves time developing and maintaining reactive applications
 * Quick start development up and running in a couple of minutes
 * Native Kafka connector for simple enterprise integration
-* Control functions embedded in a DataFlow act as agents responding to input events.
+* Embeds agentic control within a DataFlow
 {: .fs-6 }
+
+---- 
+
+{: .info }
+Analytical and control functions are connected in a DataFlow, giving full agentic behaviour in response to real time
+input events.
+{: .fs-4 }
 
 ## Example
 -----
