@@ -19,7 +19,7 @@ Analytical and control functions are connected in a DataFlow, giving full agenti
 input events.
 {: .fs-4 }
 
-## Example
+## Code samples
 -----
 DataFlow stream api combines event feeds and user functions into a processing directed acyclic graph. Wiring and 
 dispatch is automatically resolved by DataFlowBuilder. The returned DataFlow instance exposes a simple onEvent method 

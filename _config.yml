@@ -48,3 +48,6 @@ mermaid_graphNode: classDef graphNode color:#022e1f,fill:#00cfff,stroke:#000;
 mermaid_exportedService: classDef exportedService color:#022e1f,fill:#aaa3ff,stroke:#000;
 mermaid_white: classDef color:#022e1f,fill:#fff;
 mermaid_black: classDef black color:#fff,fill:#000;
+
+ga_tracking: G-NGDV621P1P
+ga_tracking_anonymize_ip: true # Use GDPR compliant Google Analytics settings (true by default)
