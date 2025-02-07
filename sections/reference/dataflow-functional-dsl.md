@@ -7,24 +7,24 @@ published: true
 layout: default
 ---
 
-# Fluxtion DSL Deep dive
+# DataFlow functional DSL
 {: .no_toc }
 ---
 
-The Fluxtion compiler supports functional construction of event processing logic, this allows developers to bind
-functions into the processor without having to construct classes marked with Fluxtion annotations. The goal of using the
+The DataFlowBuilder supports functional construction of event processing logic, this allows developers to bind
+functions into the processor without having to construct classes marked with annotations. The goal of using the
 functional DSL is to have no Fluxtion api calls in the business logic only vanilla java.
 
 This section describes the Functional DSL in greater depth than the [Fluxtion DSL](../mark-event-handling/functional_event_processing)
 exploring concepts like, aggregation, windowing and groupBy in detail.
 
-**Advantages of using Fluxtion functional DSL**
+**Advantages of using DataFlow functional DSL**
 
-- Business logic components are re-usable and testable outside Fluxtion
+- Business logic components are re-usable and testable outside DataFlow
 - Clear separation between event notification and business logic, event logic is removed from business code
 - Complex library functions like windowing and aggregation are well tested and natively supported
 - Increased developer productivity, less code to write and support
-- New functionality is simple and cheap to integrate, Fluxtion pays the cost of rewiring the event flow
+- New functionality is simple and cheap to integrate, DataFlowBuilder pays the cost of rewiring the event flow
 - No vendor lock-in, business code is free from any Fluxtion library dependencies
 
 <details open markdown="block">
@@ -37,7 +37,7 @@ exploring concepts like, aggregation, windowing and groupBy in detail.
 </details>
 
 # API overview
-Fluxtion offers a DSL to bind functions into the event processor using the familiar map/filter/peek similar to the java
+DataFlow offers a DSL to bind functions into the event processor using the familiar map/filter/peek similar to the java
 stream api. Bound functions are invoked in accordance to the [dispatch rules](../fluxtion-explored#event-dispatch-rules).
 
 An event processor is a live structure where new events trigger a set of dispatch operations. The node wrapping a function
