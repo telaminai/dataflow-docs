@@ -101,3 +101,8 @@ publishing events to DataFlow::avgSpeedByMake...
 {VW=avgSpeed-79 km/h, Ford=avgSpeed-15 km/h, BMW=avgSpeed-38 km/h}
 {VW=avgSpeed-79 km/h, Jeep=avgSpeed-24 km/h, Ford=avgSpeed-15 km/h, BMW=avgSpeed-16 km/h}
 {% endhighlight %}
+
+
+# Description
+
+**To be completed**

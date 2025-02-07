@@ -152,3 +152,6 @@ In the same terminal execute the example
 jbang MultiFeedJoinExample.java
 {% endhighlight %}
 
+# Description
+
+**To be completed**
