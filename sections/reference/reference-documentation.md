@@ -29,7 +29,7 @@ subscription and then can be manipulated with functional operations.
 
 
 
-# User classes integration quick reference
+# Agent integration quick reference
 Annotations that mark methods as receiving callbacks from the hosting DataFlow. 
 
 ## Event handling

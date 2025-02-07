@@ -3,17 +3,19 @@
 
 Topics covered in the documentation
 - DataFlow
-  - 5 minute tutorial
-  - Overview
+  - 1 minute tutorial
+  - User agents
   - Use cases
+  - 10 minute tutorial
 - Reference
   - Developer workflow
   - Subscribing
   - Functional support
-  - User functions
+  - User agents
   - GroupBy
   - Windowing
   - triggering
+  - technical deep dive
 - Integrations
   - Vanilla java
   - Kafka event feed

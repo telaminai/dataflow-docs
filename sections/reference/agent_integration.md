@@ -1,8 +1,8 @@
 ---
-title: Embedding user functions
+title: Agent Integration
 parent: Reference
 has_children: false
-nav_order: 10
+nav_order: 30
 published: true
 layout: default
 ---

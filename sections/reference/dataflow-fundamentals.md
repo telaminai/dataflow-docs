@@ -1,7 +1,7 @@
 ---
-title: Tech explained
-parent: DataFlow
-nav_order: 5
+title: Dataflow fundamentals
+parent: Reference
+nav_order: 1
 published: true
 layout: default
 ---
