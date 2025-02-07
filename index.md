@@ -190,8 +190,8 @@ by manufacturer
 ----
 
 <div class="tab">
-  <button class="tablinks" onclick="openTab(event, 'Maven')">Maven</button>
-  <button class="tablinks" onclick="openTab(event, 'Gradle')" id="defaultOpen">Gradle</button>
+  <button class="tablinks" onclick="openTab(event, 'Maven')" id="defaultOpen">Maven</button>
+  <button class="tablinks" onclick="openTab(event, 'Gradle')">Gradle</button>
 </div>
 <div id="Maven" class="tabcontent">
 <div markdown="1">
@@ -218,6 +218,13 @@ by manufacturer
 <div markdown="1">
 {% highlight groovy %}
 implementation 'com.fluxtion.dataflow:dataflow-builder:{{site.dataflow_version}}'
+
+repositories {
+    mavenCentral()
+    maven {
+        url = 'https://repo.repsy.io/mvn/fluxtion/fluxtion-public'
+    }
+}
 {% endhighlight %}
 </div>
 </div>
