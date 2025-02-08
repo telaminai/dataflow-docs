@@ -39,7 +39,9 @@ DataFlow.
 ## DataFlow
 A DataFlow is a live structure where new events trigger a set of dispatch operations. We create a DataFlow with:
 
-`DataFlowBuilder.[subscribe operation].build()`
+{% highlight java %}
+DataFlowBuilder.[subscribe operation].build()
+{% endhighlight %}
 
 <details open markdown="block">
   <summary>
@@ -121,13 +123,11 @@ to be invoked
 
 {% highlight java %}
 public static void main(String[] args) {
-    var processor = Fluxtion.interpret(c -> {
-        var strings = DataFlow.subscribe(String.class);
-        var ints = DataFlow.subscribe(Integer.class);
-        DataFlow.mapBiFunction((a, b) -> Integer.parseInt(a) + b, strings, ints)
-                .console("biMap ans: {}");
-    });
-    processor.init();
+    var strings = DataFlowBuilder.subscribe(String.class);
+    var ints = DataFlowBuilder.subscribe(Integer.class);
+    DataFlow processor = DataFlowBuilder.mapBiFunction((a, b) -> Integer.parseInt(a) + b, strings, ints)
+            .console("biMap ans: {}")
+            .build();
 
     processor.onEvent("500");
     processor.onEvent(55);
@@ -146,14 +146,11 @@ argument is optional
 
 {% highlight java %}
 public static void main(String[] args) {
-    var processor = Fluxtion.interpret(c -> {
-        var strings = DataFlow.subscribe(String.class).defaultValue("99999944");
-        var ints = DataFlow.subscribe(Integer.class);
-        DataFlow.mapBiFunction((a, b) -> Integer.parseInt(a) + b, strings, ints)
-                .console("biMap with default value ans: {}");
-    });
-    processor.init();
-
+    var strings = DataFlowBuilder.subscribe(String.class).defaultValue("200");
+    var ints = DataFlowBuilder.subscribe(Integer.class);
+    DataFlow processor = DataFlowBuilder.mapBiFunction((a, b) -> Integer.parseInt(a) + b, strings, ints)
+            .console("biMap with default value ans: {}")
+            .build();
     processor.onEvent(55);
 }
 {% endhighlight %}
@@ -161,7 +158,7 @@ public static void main(String[] args) {
 Running the example code above logs to console
 
 {% highlight console %}
-biMap with default value ans: 99999999
+biMap with default value ans: 255
 {% endhighlight %}
 
 ## Filter
@@ -184,12 +181,10 @@ DataFlow.subscribe(Integer.class)
 
 {% highlight java %}
 public static void main(String[] args) {
-    var processor = Fluxtion.interpret(c ->
-            DataFlow.subscribe(Integer.class)
-                    .filter(i -> i > 10)
-                    .console("int {} > 10 ")
-    );
-    processor.init();
+    DataFlow processor = DataFlowBuilder.subscribe(Integer.class)
+            .filter(i -> i > 10)
+            .console("int {} > 10 ")
+            .build();
 
     processor.onEvent(1);
     processor.onEvent(17);
@@ -216,12 +211,11 @@ performed on each element in the collection.
 
 {% highlight java %}
 public static void main(String[] args) {
-    var processor = Fluxtion.interpret(c ->
-            DataFlow.subscribe(String.class)
-                    .console("\ncsv in [{}]")
-                    .flatMap(s -> Arrays.asList(s.split(",")))
-                    .console("flattened item [{}]"));
-    processor.init();
+    DataFlow processor = DataFlowBuilder.subscribe(String.class)
+            .console("\ncsv in [{}]")
+            .flatMap(s -> Arrays.asList(s.split(",")))
+            .console("flattened item [{}]")
+            .build();
 
     processor.onEvent("A,B,C");
     processor.onEvent("2,3,5,7,11");
@@ -255,14 +249,12 @@ Flows can be merged to output a single flow that can be operated on
 
 {% highlight java %}
 public static void main(String[] args) {
-    var processor = Fluxtion.interpret(c ->
-            DataFlow.merge(
-                    subscribe(Long.class).console("long : {}"),
-                    subscribe(String.class).console("string : {}").map(Mappers::parseLong),
-                    subscribe(Integer.class).console("int : {}").map(Integer::longValue))
-                    .console("MERGED FLOW -> {}")
-    );
-    processor.init();
+    DataFlow processor = DataFlowBuilder.merge(
+                    DataFlowBuilder.subscribe(Long.class).console("long : {}"),
+                    DataFlowBuilder.subscribe(String.class).console("string : {}").map(Mappers::parseLong),
+                    DataFlowBuilder.subscribe(Integer.class).console("int : {}").map(Integer::longValue))
+            .console("MERGED FLOW -> {}")
+            .build();
 
     processor.onEvent(1234567890835L);
     processor.onEvent("9994567890835");
@@ -301,19 +293,16 @@ could be null if the upstream has not triggered and all the required flows have.
 
 {% highlight java %}
 public static void main(String[] args) {
-    var processor = Fluxtion.interpret(c ->
-            MergeAndMapFlowBuilder.of(MyData::new)
-                    .required(subscribe(String.class), MyData::setCustomer)
-                    .required(subscribe(Date.class), MyData::setDate)
-                    .required(subscribe(Integer.class), MyData::setId)
-                    .dataFlow()
-                    .console("new customer : {}")
-    );
-    processor.init();
+    DataFlow processor = MergeAndMapFlowBuilder.of(MyData::new)
+            .required(DataFlowBuilder.subscribe(String.class), MyData::setCustomer)
+            .required(DataFlowBuilder.subscribe(Date.class), MyData::setDate)
+            .required(DataFlowBuilder.subscribe(Integer.class), MyData::setId)
+            .dataFlow()
+            .console("new customer : {}")
+            .build();
 
     processor.onEvent(new Date());
     processor.onEvent("John Doe");
-
     //only publishes when the last required flow is received
     processor.onEvent(123);
 }
@@ -343,26 +332,22 @@ the update as soon as the data is published, not at the end of the cycle.
 
 
 {% highlight java %}
-
 public static void main(String[] args) {
-    var processor = Fluxtion.interpret(cfg ->
-            DataFlow.subscribeToIntSignal("myIntSignal")
-                    .mapToObj(d -> "intValue:" + d)
-                    .sink("mySink")//CREATE A SINK IN THE PROCESSOR
-    );
-    processor.init();
+    DataFlow processor = DataFlowBuilder.subscribeToIntSignal("myIntSignal")
+            .mapToObj(d -> "intValue:" + d)
+            .sink("mySink")//CREATE A SINK IN THE PROCESSOR
+            .build();
 
-    //ADDING A SINK
+    //ADDING SINK CONSUMER
     processor.addSink("mySink", (Consumer<String>) System.out::println);
 
     processor.publishSignal("myIntSignal", 10);
     processor.publishSignal("myIntSignal", 256);
 
-    //REMOVING A SINK
+    //REMOVING SINK CONSUMER
     processor.removeSink("mySink");
     processor.publishSignal("myIntSignal", 512);
 }
-
 {% endhighlight %}
 
 Running the example code above logs to console
@@ -381,31 +366,27 @@ When building the graph with DSL a call to `id` makes that element addressable f
 
 {% highlight java %}
 
-public class GetFlowNodeByIdExample {
-    public static void main(String[] args) throws NoSuchFieldException {
-        var processor = Fluxtion.interpret(c ->{
-            DataFlow.subscribe(String.class)
-                    .filter(s -> s.equalsIgnoreCase("monday"))
-                    //ID START - this makes the wrapped value accessible via the id
-                    .mapToInt(Mappers.count()).id("MondayChecker")
-                    //ID END
-                    .console("Monday is triggered");
-        });
-        processor.init();
+public static void main(String[] args) throws NoSuchFieldException {
+    DataFlow processor = DataFlowBuilder.subscribe(String.class)
+            .filter(s -> s.equalsIgnoreCase("monday"))
+            //ID START - this makes the wrapped value accessible via the id
+            .mapToInt(Mappers.count()).id("MondayChecker")
+            //ID END
+            .console("Monday is triggered")
+            .build();
 
-        processor.onEvent("Monday");
-        processor.onEvent("Tuesday");
-        processor.onEvent("Wednesday");
+    processor.onEvent("Monday");
+    processor.onEvent("Tuesday");
+    processor.onEvent("Wednesday");
 
-        //ACCESS THE WRAPPED VALUE BY ITS ID
-        Integer mondayCheckerCount = processor.getStreamed("MondayChecker");
-        System.out.println("Monday count:" + mondayCheckerCount + "\n");
+    //ACCESS THE WRAPPED VALUE BY ITS ID
+    Integer mondayCheckerCount = processor.getStreamed("MondayChecker");
+    System.out.println("Monday count:" + mondayCheckerCount + "\n");
 
-        //ACCESS THE WRAPPED VALUE BY ITS ID
-        processor.onEvent("Monday");
-        mondayCheckerCount = processor.getStreamed("MondayChecker");
-        System.out.println("Monday count:" + mondayCheckerCount);
-    }
+    //ACCESS THE WRAPPED VALUE BY ITS ID
+    processor.onEvent("Monday");
+    mondayCheckerCount = processor.getStreamed("MondayChecker");
+    System.out.println("Monday count:" + mondayCheckerCount);
 }
 
 {% endhighlight %}
@@ -432,41 +413,63 @@ We are using the `DataFlow.console` operation to print intermediate results to t
 The console operation is a specialisation of `DataFlow.peek`.
 
 {% highlight java %}
-//STATEFUL FUNCTIONS
-MyFunctions myFunctions = new MyFunctions();
-SimpleMath simpleMath = new SimpleMath();
+public static void main(String[] args) {
+    //STATEFUL FUNCTIONS
+    MyFunctions myFunctions = new MyFunctions();
 
-//BUILD THE GRAPH WITH DSL
-var stringFlow = DataFlow.subscribe(String.class).console("\ninput: '{}'");
+    var stringFlow = DataFlowBuilder.subscribe(String.class).console("input: '{}'");
 
-var charCount = stringFlow.map(myFunctions::totalCharCount)
-    .console("charCount: {}");
+    var charCount = stringFlow
+            .map(myFunctions::totalCharCount)
+            .console("charCountAggregate: {}");
 
-var upperCharCount = stringFlow.map(myFunctions::totalUpperCaseCharCount)
-    .console("upperCharCount: {}");
+    var upperCharCount = stringFlow
+            .map(myFunctions::totalUpperCaseCharCount)
+            .console("upperCharCountAggregate: {}");
 
-DataFlow.mapBiFunction(simpleMath::updatePercentage, upperCharCount, charCount)
-    .console("percentage chars upperCase all words:{}");
+    DataFlowBuilder.mapBiFunction(new SimpleMath()::updatePercentage, upperCharCount, charCount)
+            .console("percentage chars upperCase all words:{}");
 
-//STATELESS FUNCTION
-DataFlow.mapBiFunction(MyFunctions::wordUpperCasePercentage, upperCharCount, charCount)
-    .console("percentage chars upperCase this word:{}");
+    //STATELESS FUNCTION
+    DataFlow processor = DataFlowBuilder
+            .mapBiFunction(MyFunctions::wordUpperCasePercentage,
+                    stringFlow.map(MyFunctions::upperCaseCharCount).console("charCourWord:{}"),
+                    stringFlow.map(MyFunctions::charCount).console("upperCharCountWord:{}"))
+            .console("percentage chars upperCase this word:{}\n")
+            .build();
+
+    processor.onEvent("test ME");
+    processor.onEvent("and AGAIN");
+    processor.onEvent("ALL CAPS");
+}
 {% endhighlight %}
 
 Running the above with a strings **'test ME', 'and AGAIN'** outputs
 
 {% highlight console %}
 input: 'test ME'
-charCount: 7
-upperCharCount: 2
-percentage chars upperCase all words:0.2857142857142857
-percentage chars upperCase this word:0.2857142857142857
+charCountAggregate: 6
+upperCharCountAggregate: 2
+percentage chars upperCase all words:0.3333333333333333
+charCourWord:2
+upperCharCountWord:6
+percentage chars upperCase this word:0.3333333333333333
 
 input: 'and AGAIN'
-charCount: 16
-upperCharCount: 7
-percentage chars upperCase all words:0.391304347826087
-percentage chars upperCase this word:0.4375
+charCountAggregate: 14
+upperCharCountAggregate: 7
+percentage chars upperCase all words:0.45
+charCourWord:5
+upperCharCountWord:8
+percentage chars upperCase this word:0.625
+
+input: 'ALL CAPS'
+charCountAggregate: 21
+upperCharCountAggregate: 14
+percentage chars upperCase all words:0.5609756097560976
+charCourWord:7
+upperCharCountWord:7
+percentage chars upperCase this word:1.0
 {% endhighlight %}
 
 ### Processing graph
@@ -583,6 +586,22 @@ DataFlow path is executed. In this case we are aggregating into a list that has 
 
 {% highlight java %}
 public class SubscribeToNodeSample {
+    public static void main(String[] args) {
+        DataFlow processor = DataFlowBuilder.subscribeToNode(new MyComplexNode())
+                .console("node triggered -> {}")
+                .map(MyComplexNode::getIn)
+                .aggregate(Collectors.listFactory(4))
+                .console("last 4 elements:{}\n")
+                .build();
+
+        processor.onEvent("A");
+        processor.onEvent("B");
+        processor.onEvent("C");
+        processor.onEvent("D");
+        processor.onEvent("E");
+        processor.onEvent("F");
+    }
+
     @Getter
     @ToString
     public static class MyComplexNode {
@@ -593,26 +612,6 @@ public class SubscribeToNodeSample {
             this.in = in;
             return true;
         }
-    }
-    
-    public static void buildGraph(EventProcessorConfig processorConfig) {
-        DataFlow.subscribeToNode(new MyComplexNode())
-                .console("node triggered -> {}")
-                .map(MyComplexNode::getIn)
-                .aggregate(Collectors.listFactory(4))
-                .console("last 4 elements:{}\n");
-    }
-
-    public static void main(String[] args) {
-        var processor = Fluxtion.interpret(SubscribeToNodeSample::buildGraph);
-        processor.init();
-
-        processor.onEvent("A");
-        processor.onEvent("B");
-        processor.onEvent("C");
-        processor.onEvent("D");
-        processor.onEvent("E");
-        processor.onEvent("F");
     }
 }
 {% endhighlight %}
@@ -655,11 +654,10 @@ This example binds a data flow of String's to a java record that has an onTrigge
 
 {% highlight java %}
 public static void main(String[] args) {
-    var processor = Fluxtion.interpret(c -> {
-        var flowSupplier = DataFlow.subscribe(String.class).flowSupplier();
-        new MyFlowHolder(flowSupplier);
-    });
-    processor.init();
+    FlowSupplier<String> stringFlow = DataFlowBuilder.subscribe(String.class).flowSupplier();
+    DataFlow processor = DataFlowBuilder
+            .subscribeToNode(new MyFlowHolder(stringFlow))
+            .build();
 
     processor.onEvent("test");
 }
@@ -668,11 +666,10 @@ public record MyFlowHolder(FlowSupplier<String> flowSupplier) {
     @OnTrigger
     public boolean onTrigger() {
         //FlowSupplier is used at runtime to access the current value of the data flow
-        System.out.println("data flow value : " + flowSupplier.get().toUpperCase());
+        System.out.println("triggered by data flow -> " + flowSupplier.get().toUpperCase());
         return true;
     }
-}
-
+    }
 {% endhighlight %}
 
 Running the example code above logs to console
@@ -685,18 +682,16 @@ A data flow can push a value to any normal java class
 
 {% highlight java %}
 public static void main(String[] args) {
-    var processor = Fluxtion.interpret(c ->
-            DataFlow.subscribe(String.class)
-                    .push(new MyPushTarget()::updated)
-    );
-    processor.init();
+    DataFlow processor = DataFlowBuilder.subscribe(String.class)
+            .push(new MyPushTarget()::updated)
+            .build();
 
     processor.onEvent("AAA");
     processor.onEvent("BBB");
 }
 
-public class MyPushTarget{
-    public void updated(String in){
+public static class MyPushTarget {
+    public void updated(String in) {
         System.out.println("received push: " + in);
     }
 }
