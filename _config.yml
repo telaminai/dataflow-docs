@@ -34,7 +34,7 @@ callouts:
 
 
 #source directories
-dataflow_version: 1.0.0
+dataflow_version: 1.0.1
 
 mermaid:
   # Version of mermaid library
