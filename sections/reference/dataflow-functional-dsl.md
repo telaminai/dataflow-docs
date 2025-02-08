@@ -95,16 +95,13 @@ DataFlow.subscribe(String.class);
 - Stateful functions
 - Primitive specialisation
 - Method references
-- Inline lambdas - **interpreted mode only support, AOT mode will not serialise the inline lambda**
 
 {% highlight java %}
 public static void main(String[] args) {
-    var processor = Fluxtion.interpret(c ->
-            DataFlow.subscribe(String.class)
-                    .map(String::toLowerCase)
-                    .console("string mapped {}")
-    );
-    processor.init();
+    DataFlow processor = DataFlowBuilder.subscribe(String.class)
+            .map(String::toLowerCase)
+            .console("string in {}")
+            .build();
 
     processor.onEvent("AAA");
     processor.onEvent("BBB");
