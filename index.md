@@ -25,9 +25,6 @@ DataFlow stream api combines event feeds and user functions into a processing di
 dispatch is automatically resolved by DataFlowBuilder. The returned DataFlow instance exposes a simple onEvent method 
 for integration into a host application.
 
-Both analytical and control functions are connected in a DataFlow, giving full agentic behaviour in response to real time
-input events.
-
 <div class="tab">
   <button class="tablinks2" onclick="openTab2(event, 'Windowing')" id="defaultExample">Windowing</button>
   <button class="tablinks2" onclick="openTab2(event, 'Multi feed join')" >Multi feed join</button>

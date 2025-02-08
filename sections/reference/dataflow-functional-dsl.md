@@ -15,8 +15,8 @@ The DataFlowBuilder supports functional construction of event processing logic, 
 functions into the processor without having to construct classes marked with annotations. The goal of using the
 functional DSL is to have no Fluxtion api calls in the business logic only vanilla java.
 
-This section describes the Functional DSL in greater depth than the [Fluxtion DSL](../mark-event-handling/functional_event_processing)
-exploring concepts like, aggregation, windowing and groupBy in detail.
+All examples are located in [dataflow-examples project](https://github.com/telaminai/dataflow-examples) reference 
+module
 
 **Advantages of using DataFlow functional DSL**
 
@@ -27,34 +27,33 @@ exploring concepts like, aggregation, windowing and groupBy in detail.
 - New functionality is simple and cheap to integrate, DataFlowBuilder pays the cost of rewiring the event flow
 - No vendor lock-in, business code is free from any Fluxtion library dependencies
 
+# API overview
+DataFlowBuilder offers a DSL to bind functions into the event processor using the familiar map/filter/peek similar to the java
+stream api. Bound functions are invoked in accordance to the [dispatch rules](dataflow-fundamentals#event-dispatch-rules).
+A DataFlow starts a calculation cycle when there is a matching subscriber dispatch rule.
+
+The [DataFlowBuilder]({{site.fluxtion_src_compiler}}/builder/dataflow/DataFlow.java) class provides builder methods to
+create and bind event streams to [DataFlow]. There is no restriction on the number of DataFlows bound inside a host
+DataFlow.
+
+## DataFlow
+A DataFlow is a live structure where new events trigger a set of dispatch operations. We create a DataFlow with:
+
+`DataFlowBuilder.[subscribe operation].build()`
+
 <details open markdown="block">
   <summary>
-    Table of contents
+Table of contents
   </summary>
-  {: .text-delta }
+{: .text-delta }
 - TOC
 {:toc}
 </details>
 
-# API overview
-DataFlow offers a DSL to bind functions into the event processor using the familiar map/filter/peek similar to the java
-stream api. Bound functions are invoked in accordance to the [dispatch rules](../fluxtion-explored#event-dispatch-rules).
-
-An event processor is a live structure where new events trigger a set of dispatch operations. The node wrapping a function
-supports both stateful and stateless functions, it is the user choice what type of function to bind.
-
-## DataFlow
-To bind a functional operation we first create a [DataFlow]({{site.fluxtion_src_compiler}}/builder/dataflow/DataFlow.java) 
-in the event processor. A DataFlow triggers when the event processor starts a calculation cycle and there is a matching 
-dispatch rule. In the imperative approach an event processor entry point is registered by [annotating a method](processing_events#handle-event-input) 
-with `@OnEventHandler` or an interface exported with `@ExportService`.
-
-The [DataFlow]({{site.fluxtion_src_compiler}}/builder/dataflow/DataFlow.java) class provides builder methods to create and bind flows in an event processor. There is no restriction 
-on the number of data flows bound inside an event processor.
 
 ## Subscribe to event
 
-To create a flow for String events, call  `DataFlow.subscribe(String.class)`, any call to processor.onEvent("myString") will be 
+To create a flow for String events, call  `DataFlowBuilder.subscribe(String.class)`, any call to processor.onEvent("myString") will be 
 routed to this flow.
 
 {% highlight java %}
@@ -65,11 +64,9 @@ Once a flow has been created map, filter, groupBy, etc. functions can be applied
 
 {% highlight java %}
 public static void main(String[] args) {
-    var processor = Fluxtion.interpret(c ->
-            DataFlow.subscribe(String.class)
-                    .console("string in {}")
-    );
-    processor.init();
+    DataFlow processor = DataFlowBuilder.subscribe(String.class)
+            .console("string in {}")
+            .build();
 
     processor.onEvent("AAA");
     processor.onEvent("BBB");
