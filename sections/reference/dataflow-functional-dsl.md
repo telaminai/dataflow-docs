@@ -669,7 +669,7 @@ public record MyFlowHolder(FlowSupplier<String> flowSupplier) {
         System.out.println("triggered by data flow -> " + flowSupplier.get().toUpperCase());
         return true;
     }
-    }
+}
 {% endhighlight %}
 
 Running the example code above logs to console
@@ -712,24 +712,16 @@ into the streaming api.
 
 Maps an int signal to a String and republishes to the graph
 {% highlight java %}
-public static class MyNode {
-    @OnEventHandler
-    public boolean handleStringEvent(String stringToProcess) {
-        System.out.println("received [" + stringToProcess +"]");
-        return true;
-    }
-}
-
 public static void main(String[] args) {
-    var processor = Fluxtion.interpret(cfg -> {
-        DataFlow.subscribeToIntSignal("myIntSignal")
+    DataFlowBuilder.subscribeToIntSignal("myIntSignal")
             .mapToObj(d -> "intValue:" + d)
             .console("republish re-entrant [{}]")
             .processAsNewGraphEvent();
-        cfg.addNode(new MyNode());
-    });
 
-    processor.init();
+    var processor = DataFlowBuilder.subscribe(String.class)
+            .console("received [{}]")
+            .build();
+
     processor.publishSignal("myIntSignal", 256);
 }
 {% endhighlight %}
@@ -762,18 +754,14 @@ Child DataFlow nodes are notified when publishTrigger fires or the map function 
 
 {% highlight java %}
 public class TriggerPublishSample {
-    public static void buildGraph(EventProcessorConfig processorConfig) {
-        DataFlow.subscribeToNode(new SubscribeToNodeSample.MyComplexNode())
+    public static void main(String[] args) {
+        DataFlow processor = DataFlowBuilder.subscribeToNode(new SubscribeToNodeSample.MyComplexNode())
                 .console("node triggered -> {}")
                 .map(SubscribeToNodeSample.MyComplexNode::getIn)
                 .aggregate(Collectors.listFactory(4))
-                .publishTrigger(DataFlow.subscribeToSignal("publishMe"))
-                .console("last 4 elements:{}");
-    }
-
-    public static void main(String[] args) {
-        var processor = Fluxtion.interpret(TriggerPublishSample::buildGraph);
-        processor.init();
+                .publishTrigger(DataFlowBuilder.subscribeToSignal("publishMe"))
+                .console("last 4 elements:{}")
+                .build();
 
         processor.onEvent("A");
         processor.onEvent("B");
@@ -820,18 +808,14 @@ Child DataFlow nodes are notified when publishTriggerOverride fires.
 
 {% highlight java %}
 public class TriggerPublishOverrideSample {
-    public static void buildGraph(EventProcessorConfig processorConfig) {
-        DataFlow.subscribeToNode(new SubscribeToNodeSample.MyComplexNode())
+    public static void main(String[] args) {
+        DataFlow processor = DataFlowBuilder.subscribeToNode(new SubscribeToNodeSample.MyComplexNode())
                 .console("node triggered -> {}")
                 .map(SubscribeToNodeSample.MyComplexNode::getIn)
                 .aggregate(Collectors.listFactory(4))
-                .publishTriggerOverride(DataFlow.subscribeToSignal("publishMe"))
-                .console("last 4 elements:{}\n");
-    }
-
-    public static void main(String[] args) {
-        var processor = Fluxtion.interpret(TriggerPublishOverrideSample::buildGraph);
-        processor.init();
+                .publishTriggerOverride(DataFlowBuilder.subscribeToSignal("publishMe"))
+                .console("last 4 elements:{}\n")
+                .build();
 
         processor.onEvent("A");
         processor.onEvent("B");
@@ -876,18 +860,14 @@ A map operation only occurs when the update trigger fires.
 
 {% highlight java %}
 public class TriggerUpdateSample {
-    public static void buildGraph(EventProcessorConfig processorConfig) {
-        DataFlow.subscribeToNode(new SubscribeToNodeSample.MyComplexNode())
+    public static void main(String[] args) {
+        var processor = DataFlowBuilder.subscribeToNode(new SubscribeToNodeSample.MyComplexNode())
                 .console("node triggered -> {}")
                 .map(SubscribeToNodeSample.MyComplexNode::getIn)
                 .aggregate(Collectors.listFactory(4))
-                .updateTrigger(DataFlow.subscribeToSignal("updateMe"))
-                .console("last 4 elements:{}\n");
-    }
-
-    public static void main(String[] args) {
-        var processor = Fluxtion.interpret(TriggerUpdateSample::buildGraph);
-        processor.init();
+                .updateTrigger(DataFlowBuilder.subscribeToSignal("updateMe"))
+                .console("last 4 elements:{}\n")
+                .build();
 
         processor.onEvent("A");
         processor.onEvent("B");
@@ -927,18 +907,14 @@ The reset trigger notifies the stateful function to clear its state.
 
 {% highlight java %}
 public class TriggerResetSample {
-    public static void buildGraph(EventProcessorConfig processorConfig) {
-        DataFlow.subscribeToNode(new SubscribeToNodeSample.MyComplexNode())
+    public static void main(String[] args) {
+        DataFlow processor = DataFlowBuilder.subscribeToNode(new SubscribeToNodeSample.MyComplexNode())
                 .console("node triggered -> {}")
                 .map(SubscribeToNodeSample.MyComplexNode::getIn)
                 .aggregate(Collectors.listFactory(4))
-                .resetTrigger(DataFlow.subscribeToSignal("resetMe").console("\n--- resetTrigger ---"))
-                .console("last 4 elements:{}");
-    }
-
-    public static void main(String[] args) {
-        var processor = Fluxtion.interpret(TriggerResetSample::buildGraph);
-        processor.init();
+                .resetTrigger(DataFlowBuilder.subscribeToSignal("resetMe").console("\n--- resetTrigger ---"))
+                .console("last 4 elements:{}")
+                .build();
 
         processor.onEvent("A");
         processor.onEvent("B");
@@ -979,31 +955,12 @@ method. Configuring the resetTrigger will automatically route calls to the reset
 
 {% highlight java %}
 public class ResetFunctionSample {
-    public static class MyResetSum implements Stateful<Integer> {
-        public int count = 0;
-
-        public int increment(Object o){
-            return ++count;
-        }
-
-        @Override
-        public Integer reset() {
-            System.out.println("--- RESET CALLED ---");
-            count = 0;
-            return count;
-        }
-    }
-
-    public static void buildGraph(EventProcessorConfig processorConfig) {
-        DataFlow.subscribe(String.class)
-                .map(new MyResetSum()::increment)
-                .resetTrigger(DataFlow.subscribeToSignal("resetMe"))
-                .console("count:{}");
-    }
-
     public static void main(String[] args) {
-        var processor = Fluxtion.interpret(ResetFunctionSample::buildGraph);
-        processor.init();
+        DataFlow processor = DataFlowBuilder.subscribe(String.class)
+                .map(new MyResetSum()::increment)
+                .resetTrigger(DataFlowBuilder.subscribeToSignal("resetMe"))
+                .console("count:{}")
+                .build();
 
         processor.onEvent("A");
         processor.onEvent("B");
@@ -1013,6 +970,21 @@ public class ResetFunctionSample {
         processor.publishSignal("resetMe");
         processor.onEvent("E");
         processor.onEvent("F");
+    }
+
+    public static class MyResetSum implements Stateful<Integer> {
+        public int count = 0;
+
+        public int increment(Object o) {
+            return ++count;
+        }
+
+        @Override
+        public Integer reset() {
+            System.out.println("--- RESET CALLED ---");
+            count = 0;
+            return count;
+        }
     }
 }
 {% endhighlight %}
@@ -1052,18 +1024,15 @@ of AggregateFlowFunction to partition function state.
 public class AggregateSample {
     public record ResetList() {}
 
-    public static void buildGraph(EventProcessorConfig processorConfig) {
-        var resetSignal = DataFlow.subscribe(ResetList.class).console("\n--- RESET ---");
-
-        DataFlow.subscribe(String.class)
-                .aggregate(Collectors.listFactory(3))
-                .resetTrigger(resetSignal)
-                .console("ROLLING list: {}");
-    }
-
     public static void main(String[] args) {
-        var processor = Fluxtion.interpret(AggregateSample::buildGraph);
-        processor.init();
+        var resetSignal = DataFlowBuilder.subscribe(ResetList.class).console("\n--- RESET ---");
+
+        DataFlow processor = DataFlowBuilder
+                .subscribe(String.class)
+                .aggregate(Collectors.listFactory(3))
+                .resetTrigger(resetSignal).
+                console("ROLLING list: {}").build();
+
         processor.onEvent("A");
         processor.onEvent("B");
         processor.onEvent("C");
@@ -1116,53 +1085,13 @@ is unaltered the aggregate operation returns a null and no notifications are tri
 
 {% highlight java %}
 public class CustomAggregateFunctionSample {
-    public static class DateRangeAggregate implements AggregateFlowFunction<LocalDate, String, DateRangeAggregate> {
-        private LocalDate startDate;
-        private LocalDate endDate;
-        private String message;
-        private final transient DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
-        @Override
-        public String reset() {
-            System.out.println("--- RESET ---");
-            startDate = null;
-            endDate = null;
-            message = null;
-            return get();
-        }
-
-        @Override
-        public String get() {
-            return message;
-        }
-
-        @Override
-        public String aggregate(LocalDate input) {
-            startDate = startDate == null ? input : startDate;
-            endDate = endDate == null ? input : endDate;
-            if (input.isBefore(startDate)) {
-                startDate = input;
-            } else if (input.isAfter(endDate)) {
-                endDate = input;
-            } else {
-                //RETURN NULL -> NO CHANGE NOTIFICATIONS FIRED
-                return null;
-            }
-            message = formatter.format(startDate) + " - " + formatter.format(endDate);
-            return message;
-        }
-    }
-
-    public static void buildGraph(EventProcessorConfig processorConfig) {
-        DataFlow.subscribe(LocalDate.class)
-                .aggregate(DateRangeAggregate::new)
-                .resetTrigger(DataFlow.subscribeToSignal("resetDateRange"))
-                .console("UPDATED date range : '{}'");
-    }
 
     public static void main(String[] args) {
-        var processor = Fluxtion.interpret(CustomAggregateFunctionSample::buildGraph);
-        processor.init();
+        DataFlow processor = DataFlowBuilder.subscribe(LocalDate.class)
+                .aggregate(DateRangeAggregate::new)
+                .resetTrigger(DataFlowBuilder.subscribeToSignal("resetDateRange"))
+                .console("UPDATED date range : '{}'")
+                .build();
 
         processor.onEvent(LocalDate.of(2019, 8, 10));
         processor.onEvent(LocalDate.of(2009, 6, 14));
@@ -1173,6 +1102,43 @@ public class CustomAggregateFunctionSample {
         processor.publishSignal("resetDateRange");
         processor.onEvent(LocalDate.of(2019, 8, 10));
         processor.onEvent(LocalDate.of(2021, 3, 30));
+    }
+}
+
+public class DateRangeAggregate implements AggregateFlowFunction<LocalDate, String, DateRangeAggregate> {
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private String message;
+    private final transient DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+    @Override
+    public String reset() {
+        System.out.println("--- RESET ---");
+        startDate = null;
+        endDate = null;
+        message = null;
+        return get();
+    }
+
+    @Override
+    public String get() {
+        return message;
+    }
+
+    @Override
+    public String aggregate(LocalDate input) {
+        startDate = startDate == null ? input : startDate;
+        endDate = endDate == null ? input : endDate;
+        if (input.isBefore(startDate)) {
+            startDate = input;
+        } else if (input.isAfter(endDate)) {
+            endDate = input;
+        } else {
+            //RETURN NULL -> NO CHANGE NOTIFICATIONS FIRED
+            return null;
+        }
+        message = formatter.format(startDate) + " - " + formatter.format(endDate);
+        return message;
     }
 }
 {% endhighlight %}
@@ -1246,22 +1212,17 @@ Every 300 milliseconds the cumulative sum for the window just expired is logged 
 
 {% highlight java %}
 public class TumblingWindowSample {
-
-    public static void buildGraph(EventProcessorConfig processorConfig) {
-        DataFlow.subscribe(Integer.class)
-                .tumblingAggregate(Aggregates.intSumFactory(), 300)
-                .console("current tumble sum:{} timeDelta:%dt");
-    }
-
     public static void main(String[] args) throws InterruptedException {
-        var processor = Fluxtion.interpret(TumblingWindowSample::buildGraph);
-        processor.init();
+        DataFlow processor = DataFlowBuilder.subscribe(Integer.class)
+                .tumblingAggregate(Aggregates.intSumFactory(), 300)
+                .console("current tumble sum:{} timeDelta:%dt")
+                .build();
         Random rand = new Random();
 
         try (ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor()) {
             executor.scheduleAtFixedRate(
                     () -> processor.onEvent(rand.nextInt(100)),
-                    10,10, TimeUnit.MILLISECONDS);
+                    10, 10, TimeUnit.MILLISECONDS);
             Thread.sleep(4_000);
         }
     }
@@ -1301,25 +1262,22 @@ event. A GoToCheckout event publishes the contents of the cart down stream if th
 
 {% highlight java %}
 public class TumblingTriggerSample {
-
     public record ClearCart() {}
+
     public record GoToCheckout() {}
 
-    public static void buildGraph(EventProcessorConfig processorConfig) {
-        var resetSignal = DataFlow.subscribe(ClearCart.class).console("\n--- CLEAR CART ---");
-        var publishSignal = DataFlow.subscribe(GoToCheckout.class).console("\n--- CHECKOUT CART ---");
+    public static void main(String[] args) {
+        var resetSignal = DataFlowBuilder.subscribe(ClearCart.class).console("\n--- CLEAR CART ---");
+        var publishSignal = DataFlowBuilder.subscribe(GoToCheckout.class).console("\n--- CHECKOUT CART ---");
 
-        DataFlow.subscribe(String.class)
+        DataFlow processor = DataFlowBuilder.subscribe(String.class)
                 .aggregate(Collectors.listFactory(3))
                 .resetTrigger(resetSignal)
                 .publishTriggerOverride(publishSignal)
                 .filter(l -> !l.isEmpty())
-                .console("CURRENT CART: {}");
-    }
+                .console("CURRENT CART: {}")
+                .build();
 
-    public static void main(String[] args) {
-        var processor = Fluxtion.interpret(TumblingTriggerSample::buildGraph);
-        processor.init();
         processor.onEvent("Gloves");
         processor.onEvent("Toothpaste");
         processor.onEvent("Towel");
@@ -1372,22 +1330,18 @@ window example that resets the sum every 300 milliseconds.
 
 {% highlight java %}
 public class SlidingWindowSample {
-
-    public static void buildGraph(EventProcessorConfig processorConfig) {
-        DataFlow.subscribe(Integer.class)
-                .slidingAggregate(Aggregates.intSumFactory(), 300, 4)
-                .console("current sliding 1.2 second sum:{} timeDelta:%dt");
-    }
-
     public static void main(String[] args) throws InterruptedException {
-        var processor = Fluxtion.interpret(SlidingWindowSample::buildGraph);
-        processor.init();
+        DataFlow processor = DataFlowBuilder.subscribe(Integer.class)
+                .slidingAggregate(Aggregates.intSumFactory(), 300, 4)
+                .console("current sliding 1.2 second sum:{} timeDelta:%dt")
+                .build();
+
         Random rand = new Random();
 
         try (ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor()) {
             executor.scheduleAtFixedRate(
                     () -> processor.onEvent(rand.nextInt(100)),
-                    10,10, TimeUnit.MILLISECONDS);
+                    10, 10, TimeUnit.MILLISECONDS);
             Thread.sleep(4_000);
         }
     }
@@ -1420,19 +1374,16 @@ to the partition.
 public class GroupBySample {
     public record ResetList() {}
 
-    public static void buildGraph(EventProcessorConfig processorConfig) {
-        var resetSignal = DataFlow.subscribe(ResetList.class).console("\n--- RESET ---");
+    public static void main(String[] args) {
+        var resetSignal = DataFlowBuilder.subscribe(ResetList.class).console("\n--- RESET ---");
 
-        DataFlow.subscribe(Integer.class)
+        DataFlow processor = DataFlowBuilder.subscribe(Integer.class)
                 .groupBy(i -> i % 2 == 0 ? "evens" : "odds", Aggregates.countFactory())
                 .resetTrigger(resetSignal)
                 .map(GroupBy::toMap)
-                .console("ODD/EVEN map:{}");
-    }
+                .console("ODD/EVEN map:{}")
+                .build();
 
-    public static void main(String[] args) {
-        var processor = Fluxtion.interpret(GroupBySample::buildGraph);
-        processor.init();
         processor.onEvent(1);
         processor.onEvent(2);
 
@@ -1477,19 +1428,16 @@ This is shorthand for:
 public class GroupByToListSample {
     public record ResetList() {}
 
-    public static void buildGraph(EventProcessorConfig processorConfig) {
-        var resetSignal = DataFlow.subscribe(ResetList.class).console("\n--- RESET ---");
+    public static void main(String[] args) {
+        var resetSignal = DataFlowBuilder.subscribe(ResetList.class).console("\n--- RESET ---");
 
-        DataFlow.subscribe(Integer.class)
+        DataFlow processor = DataFlowBuilder.subscribe(Integer.class)
                 .groupByToList(i -> i % 2 == 0 ? "evens" : "odds")
                 .resetTrigger(resetSignal)
                 .map(GroupBy::toMap)
-                .console("ODD/EVEN map:{}");
-    }
+                .console("ODD/EVEN map:{}")
+                .build();
 
-    public static void main(String[] args) {
-        var processor = Fluxtion.interpret(GroupByToListSample::buildGraph);
-        processor.init();
         processor.onEvent(1);
         processor.onEvent(2);
         processor.onEvent(5);
@@ -1518,22 +1466,18 @@ ODD/EVEN map:{}
 
 {% highlight java %}
 public class GroupByToSetSample {
-
     public record ResetList() {}
 
-    public static void buildGraph(EventProcessorConfig processorConfig) {
-        var resetSignal = DataFlow.subscribe(ResetList.class).console("\n--- RESET ---");
+    public static void main(String[] args) {
+        var resetSignal = DataFlowBuilder.subscribe(ResetList.class).console("\n--- RESET ---");
 
-        DataFlow.subscribe(Integer.class)
+        DataFlow processor = DataFlowBuilder.subscribe(Integer.class)
                 .groupByToSet(i -> i % 2 == 0 ? "evens" : "odds")
                 .resetTrigger(resetSignal)
                 .map(GroupBy::toMap)
-                .console("ODD/EVEN map:{}");
-    }
+                .console("ODD/EVEN map:{}")
+                .build();
 
-    public static void main(String[] args) {
-        var processor = Fluxtion.interpret(GroupByToSetSample::buildGraph);
-        processor.init();
         processor.onEvent(1);
         processor.onEvent(2);
         processor.onEvent(2);
@@ -1568,26 +1512,14 @@ ODD/EVEN map:{}
 {% highlight java %}
 public class GroupByFieldsSample {
 
-    public record Pupil(int year, String sex, String name){}
-
-    public static void buildGraph(EventProcessorConfig processorConfig) {
-
-        DataFlow.subscribe(Pupil.class)
-                .groupByFieldsAggregate(Aggregates.countFactory(), Pupil::year, Pupil::sex)
-                .map(GroupByFieldsSample::formatGroupBy)
-                .console("Pupil count by year/sex \n----\n{}----\n");
-    }
-
-    private static String formatGroupBy(GroupBy<GroupByKey<Pupil>, Integer> groupBy) {
-        Map<GroupByKey<Pupil>, Integer> groupByMap = groupBy.toMap();
-        StringBuilder stringBuilder = new StringBuilder();
-        groupByMap.forEach((k, v) -> stringBuilder.append(k.getKey() + ": " + v + "\n"));
-        return stringBuilder.toString();
-    }
+    public record Pupil(int year, String sex, String name) {}
 
     public static void main(String[] args) {
-        var processor = Fluxtion.interpret(GroupByFieldsSample::buildGraph);
-        processor.init();
+        DataFlow processor = DataFlowBuilder.subscribe(Pupil.class)
+                .groupByFieldsAggregate(Aggregates.countFactory(), Pupil::year, Pupil::sex)
+                .map(GroupByFieldsSample::formatGroupBy)
+                .console("Pupil count by year/sex \n----\n{}----\n")
+                .build();
 
         processor.onEvent(new Pupil(2015, "Female", "Bob"));
         processor.onEvent(new Pupil(2013, "Male", "Ashkay"));
@@ -1596,6 +1528,13 @@ public class GroupByFieldsSample {
         processor.onEvent(new Pupil(2013, "Female", "Tamsin"));
         processor.onEvent(new Pupil(2013, "Female", "Ayola"));
         processor.onEvent(new Pupil(2015, "Female", "Sunita"));
+    }
+
+    private static String formatGroupBy(GroupBy<GroupByKey<Pupil>, Integer> groupBy) {
+        Map<GroupByKey<Pupil>, Integer> groupByMap = groupBy.toMap();
+        StringBuilder stringBuilder = new StringBuilder();
+        groupByMap.forEach((k, v) -> stringBuilder.append(k.getKey() + ": " + v + "\n"));
+        return stringBuilder.toString();
     }
 }
 {% endhighlight %}
@@ -1661,17 +1600,14 @@ collection are removed.
 {% highlight java %}
 public class GroupByDeleteSample {
 
-    public record Pupil(long pupilId, int year, String name){}
+    public record Pupil(long pupilId, int year, String name) {}
 
     public static void main(String[] args) {
-        EventProcessor processor = Fluxtion.interpret(c -> {
-            DataFlow.groupByToList(Pupil::year)
-                    .deleteByValue(new DeleteFilter()::leftSchool)
-                    .map(GroupBy::toMap)
-                    .console();
-        });
-
-        processor.init();
+        DataFlow processor = DataFlowBuilder.groupByToList(Pupil::year)
+                .deleteByValue(new DeleteFilter()::leftSchool)
+                .map(GroupBy::toMap)
+                .console()
+                .build();
 
         processor.onEvent(new Pupil(1, 2025, "A"));
         processor.onEvent(new Pupil(2, 2025, "B"));
@@ -1689,17 +1625,17 @@ public class GroupByDeleteSample {
         processor.onEvent(2023);
     }
 
-    public static class DeleteFilter{
+    public static class DeleteFilter {
 
         private int currentGraduationYear = Integer.MIN_VALUE;
 
         @OnEventHandler
-        public boolean currentGraduationYear(int currentGraduationYear){
+        public boolean currentGraduationYear(int currentGraduationYear) {
             this.currentGraduationYear = currentGraduationYear;
             return true;
         }
 
-        public boolean leftSchool(List<Pupil> pupil){
+        public boolean leftSchool(List<Pupil> pupil) {
             return !pupil.isEmpty() && pupil.getFirst().year() < this.currentGraduationYear;
         }
     }
@@ -1746,28 +1682,22 @@ public class TumblingGroupBySample {
     public record Trade(String symbol, int amountTraded) {}
     private static String[] symbols = new String[]{"GOOG", "AMZN", "MSFT", "TKM"};
 
-    public static void buildGraph(EventProcessorConfig processorConfig) {
-        DataFlow.subscribe(Trade.class)
+    public static void main(String[] args) throws InterruptedException {
+        DataFlow processor = DataFlowBuilder.subscribe(Trade.class)
                 .groupByTumbling(Trade::symbol, Trade::amountTraded, Aggregates.intSumFactory(), 250)
                 .map(GroupBy::toMap)
-                .console("Trade volume for last 250 millis:{} timeDelta:%dt");
-    }
+                .console("Trade volume for last 250 millis:{} timeDelta:%dt")
+                .build();
 
-    public static void main(String[] args) throws InterruptedException {
-        var processor = Fluxtion.interpret(TumblingGroupBySample::buildGraph);
-        processor.init();
         Random rand = new Random();
-
         try (ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor()) {
             executor.scheduleAtFixedRate(
                     () -> processor.onEvent(new Trade(symbols[rand.nextInt(symbols.length)], rand.nextInt(100))),
-                    10,10, TimeUnit.MILLISECONDS);
+                    10, 10, TimeUnit.MILLISECONDS);
             Thread.sleep(4_000);
         }
     }
 }
-
-
 {% endhighlight %}
 
 Running the example code above logs to console
@@ -1797,24 +1727,21 @@ Trade volume for last 250 millis:{MSFT=263, GOOG=197, AMZN=411, TKM=373} timeDel
 {% highlight java %}
 public class SlidingGroupBySample {
     public record Trade(String symbol, int amountTraded) {}
+
     private static String[] symbols = new String[]{"GOOG", "AMZN", "MSFT", "TKM"};
 
-    public static void buildGraph(EventProcessorConfig processorConfig) {
-        DataFlow.subscribe(Trade.class)
+    public static void main(String[] args) throws InterruptedException {
+        DataFlow processor = DataFlowBuilder.subscribe(Trade.class)
                 .groupBySliding(Trade::symbol, Trade::amountTraded, Aggregates.intSumFactory(), 250, 4)
                 .map(GroupBy::toMap)
-                .console("Trade volume for last second:{} timeDelta:%dt");
-    }
+                .console("Trade volume for last second:{} timeDelta:%dt")
+                .build();
 
-    public static void main(String[] args) throws InterruptedException {
-        var processor = Fluxtion.interpret(SlidingGroupBySample::buildGraph);
-        processor.init();
         Random rand = new Random();
-
         try (ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor()) {
             executor.scheduleAtFixedRate(
                     () -> processor.onEvent(new Trade(symbols[rand.nextInt(symbols.length)], rand.nextInt(100))),
-                    10,10, TimeUnit.MILLISECONDS);
+                    10, 10, TimeUnit.MILLISECONDS);
             Thread.sleep(4_000);
         }
     }
@@ -1843,21 +1770,29 @@ Trade volume for last second:{MSFT=1384, GOOG=1344, AMZN=1153, TKM=865} timeDelt
 ## Tumbling GroupBy with compound key
 
 {% highlight java %}
-
 public class TumblingGroupByCompoundKeySample {
     public record Trade(String symbol, String client, int amountTraded) {}
     private static String[] symbols = new String[]{"GOOG", "AMZN", "MSFT", "TKM"};
     private static String[] clients = new String[]{"client_A", "client_B", "client_D", "client_E"};
 
-    public static void buildGraph(EventProcessorConfig processorConfig) {
-        DataFlow.subscribe(Trade.class)
+    public static void main(String[] args) throws InterruptedException {
+        DataFlow processor = DataFlowBuilder.subscribe(Trade.class)
                 .groupByTumbling(
                         GroupByKey.build(Trade::client, Trade::symbol),
                         Trade::amountTraded,
                         Aggregates.intSumFactory(),
                         250)
                 .map(TumblingGroupByCompoundKeySample::formatGroupBy)
-                .console("Trade volume tumbling per 250 millis by client and symbol timeDelta:%dt:\n{}----------------------\n");
+                .console("Trade volume tumbling per 250 millis by client and symbol timeDelta:%dt:\n{}----------------------\n")
+                .build();
+        
+        Random rand = new Random();
+        try (ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor()) {
+            executor.scheduleAtFixedRate(
+                    () -> processor.onEvent(new Trade(symbols[rand.nextInt(symbols.length)], clients[rand.nextInt(clients.length)], rand.nextInt(100))),
+                    10, 10, TimeUnit.MILLISECONDS);
+            Thread.sleep(4_000);
+        }
     }
 
     private static <T> String formatGroupBy(GroupBy<GroupByKey<T>, Integer> groupBy) {
@@ -1865,19 +1800,6 @@ public class TumblingGroupByCompoundKeySample {
         StringBuilder stringBuilder = new StringBuilder();
         groupByMap.forEach((k, v) -> stringBuilder.append(k.getKey() + ": " + v + "\n"));
         return stringBuilder.toString();
-    }
-
-    public static void main(String[] args) throws InterruptedException {
-        var processor = Fluxtion.interpret(TumblingGroupByCompoundKeySample::buildGraph);
-        processor.init();
-        Random rand = new Random();
-
-        try (ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor()) {
-            executor.scheduleAtFixedRate(
-                    () -> processor.onEvent(new Trade(symbols[rand.nextInt(symbols.length)], clients[rand.nextInt(clients.length)], rand.nextInt(100))),
-                    10,10, TimeUnit.MILLISECONDS);
-            Thread.sleep(4_000);
-        }
     }
 }
 {% endhighlight %}
@@ -1943,38 +1865,33 @@ public class SlidingGroupByCompoundKeySample {
     private static String[] symbols = new String[]{"GOOG", "AMZN", "MSFT", "TKM"};
     private static String[] clients = new String[]{"client_A", "client_B", "client_D", "client_E"};
 
-    public static void buildGraph(EventProcessorConfig processorConfig) {
-        DataFlow.subscribe(Trade.class)
+    public static void main(String[] args) throws InterruptedException {
+        DataFlow processor = DataFlowBuilder.subscribe(Trade.class)
                 .groupBySliding(
                         GroupByKey.build(Trade::client, Trade::symbol),
-                        Trade::amountTraded, 
+                        Trade::amountTraded,
                         Aggregates.intSumFactory(),
                         250, 4)
                 .map(SlidingGroupByCompoundKeySample::formatGroupBy)
-                .console("Trade volume for last second by symbol/client timeDelta:%dt:\n{} \n--------\n");
+                .console("Trade volume for last second by client and symbol timeDelta:%dt:\n{}----------------------\n")
+                .build();
+
+        Random rand = new Random();
+        try (ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor()) {
+            executor.scheduleAtFixedRate(
+                    () -> processor.onEvent(new Trade(symbols[rand.nextInt(symbols.length)], clients[rand.nextInt(clients.length)], rand.nextInt(100))),
+                    10, 10, TimeUnit.MILLISECONDS);
+            Thread.sleep(4_000);
+        }
     }
 
-    private static String formatGroupBy(GroupBy<GroupByKey<Trade>, Integer> groupBy) {
-        Map<GroupByKey<Trade>, Integer> groupByMap = groupBy.toMap();
+    private static <T> String formatGroupBy(GroupBy<GroupByKey<T>, Integer> groupBy) {
+        Map<GroupByKey<T>, Integer> groupByMap = groupBy.toMap();
         StringBuilder stringBuilder = new StringBuilder();
         groupByMap.forEach((k, v) -> stringBuilder.append(k.getKey() + ": " + v + "\n"));
         return stringBuilder.toString();
     }
-
-    public static void main(String[] args) throws InterruptedException {
-        var processor = Fluxtion.interpret(SlidingGroupByCompoundKeySample::buildGraph);
-        processor.init();
-        Random rand = new Random();
-
-        try (ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor()) {
-            executor.scheduleAtFixedRate(
-                    () -> processor.onEvent(new Trade(symbols[rand.nextInt(symbols.length)], clients[rand.nextInt(clients.length)], rand.nextInt(100))),
-                    10,10, TimeUnit.MILLISECONDS);
-            Thread.sleep(4_000);
-        }
-    }
 }
-
 {% endhighlight %}
 
 Running the example code above logs to console
@@ -2050,20 +1967,15 @@ Keys of GroupBy can be mapped with
 
 {% highlight java %}
 public class GroupByMapKeySample {
+    public record Pupil(int year, String sex, String name) {}
 
-    public record Pupil(int year, String sex, String name){}
-
-    public static void buildGraph(EventProcessorConfig processorConfig) {
-        DataFlow.subscribe(Pupil.class)
+    public static void main(String[] args) {
+        DataFlow processor = DataFlowBuilder.subscribe(Pupil.class)
                 .groupByFieldsAggregate(Aggregates.countFactory(), Pupil::year, Pupil::sex)
                 .mapKeys(GroupByKey::getKey)//MAPS KEYS
                 .map(GroupBy::toMap)
-                .console("{}\n----");
-    }
-    
-    public static void main(String[] args) {
-        var processor = Fluxtion.interpret(GroupByMapKeySample::buildGraph);
-        processor.init();
+                .console("{}")
+                .build();
 
         processor.onEvent(new Pupil(2015, "Female", "Bob"));
         processor.onEvent(new Pupil(2013, "Male", "Ashkay"));
@@ -2097,29 +2009,19 @@ Values of GroupBy can be mapped with
 
 {% highlight java %}
 public class GroupByMapValuesSample {
+    public record ResetList() {}
 
-    public record ResetList() {
-    }
+    public static void main(String[] args) {
+        var resetSignal = DataFlowBuilder.subscribe(ResetList.class).console("\n--- RESET ---");
 
-    public static void buildGraph(EventProcessorConfig processorConfig) {
-        var resetSignal = DataFlow.subscribe(ResetList.class).console("\n--- RESET ---");
-
-        DataFlow.subscribe(Integer.class)
+        DataFlow processor = DataFlowBuilder.subscribe(Integer.class)
                 .groupByToSet(i -> i % 2 == 0 ? "evens" : "odds")
                 .resetTrigger(resetSignal)
                 .mapValues(GroupByMapValuesSample::toRange)//MAPS VALUES
                 .map(GroupBy::toMap)
-                .console("ODD/EVEN map:{}");
-    }
+                .console("ODD/EVEN map:{}")
+                .build();
 
-    private static String toRange(Set<Integer> integers) {
-        int max = integers.stream().max(Integer::compareTo).get();
-        int min = integers.stream().min(Integer::compareTo).get();
-        return "range [" + min + "," + max + "]";
-    }
-
-    public static void main(String[] args) {
-        var processor = Fluxtion.interpret(GroupByMapValuesSample::buildGraph);
         processor.init();
         processor.onEvent(1);
         processor.onEvent(2);
@@ -2130,6 +2032,12 @@ public class GroupByMapValuesSample {
         processor.onEvent(7);
         processor.onEvent(2);
         processor.onEvent(new ResetList());
+    }
+
+    private static String toRange(Set<Integer> integers) {
+        int max = integers.stream().max(Integer::compareTo).get();
+        int min = integers.stream().min(Integer::compareTo).get();
+        return "range [" + min + "," + max + "]";
     }
 }
 {% endhighlight %}
@@ -2160,18 +2068,14 @@ consume.
 
 {% highlight java %}
 public class GroupByReduceSample {
-
-    public static void buildGraph(EventProcessorConfig processorConfig) {
-        DataFlow.subscribe(Integer.class)
+    public static void main(String[] args) {
+        var processor = DataFlowBuilder.subscribe(Integer.class)
                 .groupBy(i -> i % 2 == 0 ? "evens" : "odds", Aggregates.intSumFactory())
                 .console("ODD/EVEN sum:{}")
                 .reduceValues(Aggregates.intSumFactory())
-                .console("REDUCED sum:{}\n");
-    }
+                .console("REDUCED sum:{}\n")
+                .build();
 
-    public static void main(String[] args) {
-        var processor = Fluxtion.interpret(GroupByReduceSample::buildGraph);
-        processor.init();
         processor.onEvent(1);
         processor.onEvent(2);
         processor.onEvent(5);
@@ -2218,33 +2122,23 @@ Is used to map the School, Pupil Tuple into a pretty print String.
 
 {% highlight java %}
 public class GroupByJoinSample {
-    
-    public record Pupil(int year, String school, String name){}
-    public record School(String name){}
-
-    public static void buildGraph(EventProcessorConfig processorConfig) {
-
-        var pupils = DataFlow.subscribe(Pupil.class).groupByToList(Pupil::school);
-        var schools = DataFlow.subscribe(School.class).groupBy(School::name);
-
-        JoinFlowBuilder.innerJoin(schools, pupils)
-                .mapValues(Tuples.mapTuple(GroupByJoinSample::prettyPrint))
-                .map(GroupBy::toMap)
-                .console();
-    }
-
-    private static String prettyPrint(School schoolName, List<Pupil> pupils) {
-        return pupils.stream().map(Pupil::name).collect(Collectors.joining(",", "pupils[", "] ") );
-    }
+    public record Pupil(int year, String school, String name) {}
+    public record School(String name) {}
 
     public static void main(String[] args) {
-        var processor = Fluxtion.interpret(GroupByJoinSample::buildGraph);
-        processor.init();
+        var pupils = DataFlowBuilder.subscribe(Pupil.class).groupByToList(Pupil::school);
+        var schools = DataFlowBuilder.subscribe(School.class).groupBy(School::name);
+
+        DataFlow processor = JoinFlowBuilder.innerJoin(schools, pupils)
+                .mapValues(Tuples.mapTuple(GroupByJoinSample::prettyPrint))
+                .map(GroupBy::toMap)
+                .console()
+                .build();
 
         //register some schools
         processor.onEvent(new School("RGS"));
         processor.onEvent(new School("Belles"));
-        
+
         //register some pupils
         processor.onEvent(new Pupil(2015, "RGS", "Bob"));
         processor.onEvent(new Pupil(2013, "RGS", "Ashkay"));
@@ -2253,6 +2147,10 @@ public class GroupByJoinSample {
         processor.onEvent(new Pupil(2013, "Belles", "Tamsin"));
         processor.onEvent(new Pupil(2013, "Belles", "Ayola"));
         processor.onEvent(new Pupil(2015, "Belles", "Sunita"));
+    }
+
+    private static String prettyPrint(School schoolName, List<Pupil> pupils) {
+        return pupils.stream().map(Pupil::name).collect(Collectors.joining(",", "pupils[", "]"));
     }
 }
 {% endhighlight %}
@@ -2278,35 +2176,22 @@ A default value of an empty collection is assigned to the pupil groupBy so the f
 value.
 
 {% highlight java %}
-
 public class GroupByLeftOuterJoinSample {
+    public record Pupil(int year, String school, String name) {}
 
-    public record Pupil(int year, String school, String name){}
-    public record School(String name){}
+    public record School(String name) {}
 
-    public static void buildGraph(EventProcessorConfig processorConfig) {
-
-        var schools = DataFlow.subscribe(School.class)
-                .groupBy(School::name);
-        var pupils = DataFlow.subscribe(Pupil.class)
+    public static void main(String[] args) {
+        var schools = DataFlowBuilder.subscribe(School.class).groupBy(School::name);
+        var pupils = DataFlowBuilder.subscribe(Pupil.class)
                 .groupByToList(Pupil::school)
                 .defaultValue(GroupBy.emptyCollection());
 
-        JoinFlowBuilder.leftJoin(schools, pupils)
+        DataFlow processor = JoinFlowBuilder.leftJoin(schools, pupils)
                 .mapValues(Tuples.mapTuple(GroupByLeftOuterJoinSample::prettyPrint))
                 .map(GroupBy::toMap)
-                .console();
-    }
-
-    private static String prettyPrint(School schoolName, List<Pupil> pupils) {
-        pupils = pupils == null ? Collections.emptyList() : pupils;
-        return pupils.stream().map(Pupil::name).collect(Collectors.joining(",", "pupils[", "]") );
-    }
-
-
-    public static void main(String[] args) {
-        var processor = Fluxtion.interpret(GroupByLeftOuterJoinSample::buildGraph);
-        processor.init();
+                .console()
+                .build();
 
         //register some schools
         processor.onEvent(new School("RGS"));
@@ -2321,6 +2206,11 @@ public class GroupByLeftOuterJoinSample {
         System.out.println("left outer join\n");
         //left outer
         processor.onEvent(new School("Framling"));
+    }
+
+    private static String prettyPrint(School schoolName, List<Pupil> pupils) {
+        pupils = pupils == null ? Collections.emptyList() : pupils;
+        return pupils.stream().map(Pupil::name).collect(Collectors.joining(",", "pupils[", "]"));
     }
 }
 {% endhighlight %}
@@ -2349,32 +2239,19 @@ value.
 
 {% highlight java %}
 public class GroupByRightOuterJoinSample {
+    public record Pupil(int year, String school, String name) {}
 
-    public record Pupil(int year, String school, String name){}
-    public record School(String name){}
-
-    public static void buildGraph(EventProcessorConfig processorConfig) {
-
-        var schools = DataFlow.subscribe(School.class)
-                .groupBy(School::name);
-        var pupils = DataFlow.subscribe(Pupil.class)
-                .groupByToList(Pupil::school);
-
-        JoinFlowBuilder.rightJoin(schools, pupils)
-                .mapValues(Tuples.mapTuple(GroupByRightOuterJoinSample::prettyPrint))
-                .map(GroupBy::toMap)
-                .console();
-    }
-
-    private static String prettyPrint(School schoolName, List<Pupil> pupils) {
-        pupils = pupils == null ? Collections.emptyList() : pupils;
-        return pupils.stream().map(Pupil::name).collect(Collectors.joining(",", "pupils[", "]") );
-    }
-
+    public record School(String name) {}
 
     public static void main(String[] args) {
-        var processor = Fluxtion.interpret(GroupByRightOuterJoinSample::buildGraph);
-        processor.init();
+        var schools = DataFlowBuilder.subscribe(School.class).groupBy(School::name);
+        var pupils = DataFlowBuilder.subscribe(Pupil.class).groupByToList(Pupil::school);
+
+        DataFlow processor = JoinFlowBuilder.rightJoin(schools, pupils)
+                .mapValues(Tuples.mapTuple(GroupByRightOuterJoinSample::prettyPrint))
+                .map(GroupBy::toMap)
+                .console()
+                .build();
 
         //register some schools
         processor.onEvent(new School("RGS"));
@@ -2386,11 +2263,15 @@ public class GroupByRightOuterJoinSample {
         processor.onEvent(new Pupil(2013, "Belles", "Channing"));
 
         System.out.println("right outer join\n");
-        //right outer
+        //left outer
         processor.onEvent(new Pupil(2015, "Framling", "Sunita"));
     }
-}
 
+    private static String prettyPrint(School schoolName, List<Pupil> pupils) {
+        pupils = pupils == null ? Collections.emptyList() : pupils;
+        return pupils.stream().map(Pupil::name).collect(Collectors.joining(",", "pupils[", "]"));
+    }
+}
 {% endhighlight %}
 
 Running the example code above logs to console
@@ -2416,31 +2297,19 @@ value.
 {% highlight java %}
 public class GroupByFullOuterJoinSample {
 
-    public record Pupil(int year, String school, String name){}
-    public record School(String name){}
+    public record Pupil(int year, String school, String name) {}
 
-    public static void buildGraph(EventProcessorConfig processorConfig) {
-
-        var schools = DataFlow.subscribe(School.class)
-                .groupBy(School::name);
-        var pupils = DataFlow.subscribe(Pupil.class)
-                .groupByToList(Pupil::school);
-
-        JoinFlowBuilder.outerJoin(schools, pupils)
-                .mapValues(Tuples.mapTuple(GroupByFullOuterJoinSample::prettyPrint))
-                .map(GroupBy::toMap)
-                .console();
-    }
-
-    private static String prettyPrint(School schoolName, List<Pupil> pupils) {
-        pupils = pupils == null ? Collections.emptyList() : pupils;
-        return pupils.stream().map(Pupil::name).collect(Collectors.joining(",", "pupils[", "]") );
-    }
-
+    public record School(String name) {}
 
     public static void main(String[] args) {
-        var processor = Fluxtion.interpret(GroupByFullOuterJoinSample::buildGraph);
-        processor.init();
+        var schools = DataFlowBuilder.subscribe(School.class).groupBy(School::name);
+        var pupils = DataFlowBuilder.subscribe(Pupil.class).groupByToList(Pupil::school);
+
+        DataFlow processor = JoinFlowBuilder.outerJoin(schools, pupils)
+                .mapValues(Tuples.mapTuple(GroupByFullOuterJoinSample::prettyPrint))
+                .map(GroupBy::toMap)
+                .console()
+                .build();
 
         //register some schools
         processor.onEvent(new School("RGS"));
@@ -2456,8 +2325,12 @@ public class GroupByFullOuterJoinSample {
         processor.onEvent(new Pupil(2015, "Framling", "Sunita"));
         processor.onEvent(new School("St trinians"));
     }
-}
 
+    private static String prettyPrint(School schoolName, List<Pupil> pupils) {
+        pupils = pupils == null ? Collections.emptyList() : pupils;
+        return pupils.stream().map(Pupil::name).collect(Collectors.joining(",", "pupils[", "]"));
+    }
+}
 {% endhighlight %}
 
 Running the example code above logs to console
@@ -2505,24 +2378,22 @@ pretty printing function.
 public class MultiJoinSample {
 
     public static void main(String[] args) {
+        var ageDataFlow = DataFlowBuilder.groupBy(Age::getName);
+        var genderDataFlow = DataFlowBuilder.groupBy(Gender::getName);
+        var nationalityDataFlow = DataFlowBuilder.groupBy(Nationality::getName);
+        var dependentDataFlow = DataFlowBuilder.groupByToList(Dependent::getGuardianName);
 
-        var processor = Fluxtion.interpret(c -> {
-            var ageDataFlow = DataFlow.groupBy(Age::getName);
-            var genderDataFlow = DataFlow.groupBy(Gender::getName);
-            var nationalityDataFlow = DataFlow.groupBy(Nationality::getName);
-            var dependentDataFlow = DataFlow.groupByToList(Dependent::getGuardianName);
+        DataFlow processor = MultiJoinBuilder.builder(String.class, MergedData::new)
+                .addJoin(ageDataFlow, MergedData::setAge)
+                .addJoin(genderDataFlow, MergedData::setGender)
+                .addJoin(nationalityDataFlow, MergedData::setNationality)
+                .addOptionalJoin(dependentDataFlow, MergedData::setDependent)
+                .dataFlow()
+                .mapValues(MergedData::formattedString)
+                .map(GroupBy::toMap)
+                .console("multi join result : {}")
+                .build();
 
-            MultiJoinBuilder.builder(String.class, MergedData::new)
-                    .addJoin(ageDataFlow, MergedData::setAge)
-                    .addJoin(genderDataFlow, MergedData::setGender)
-                    .addJoin(nationalityDataFlow, MergedData::setNationality)
-                    .addOptionalJoin(dependentDataFlow, MergedData::setDependent)
-                    .dataFlow()
-                    .mapValues(MergedData::formattedString)
-                    .map(GroupBy::toMap)
-                    .console("multi join result : {}");
-        });
-        processor.init();
 
         processor.onEvent(new Age("greg", 47));
         processor.onEvent(new Gender("greg", "male"));
